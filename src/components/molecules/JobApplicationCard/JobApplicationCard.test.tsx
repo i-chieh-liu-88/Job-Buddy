@@ -66,12 +66,30 @@ describe("JobApplicationCard", () => {
 
     await user.click(openButton);
 
-    expect(onSelect).toHaveBeenCalledWith(application);
+    expect(onSelect).toHaveBeenCalledWith(application, openButton);
     expect(sortableListeners.onPointerDown).not.toHaveBeenCalled();
     expect(dragButton).toHaveAttribute("data-sortable-attributes", "present");
     expect(dragButton).toHaveClass("touch-none");
     expect(openButton).not.toHaveAttribute("data-sortable-attributes");
     expect(setActivatorNodeRef).toHaveBeenCalledWith(dragButton);
+  });
+
+  it("marks the opener by application and keeps phrasing content inside it", () => {
+    render(
+      <JobApplicationCard application={application} onSelect={vi.fn()} />,
+    );
+
+    const openButton = screen.getByRole("button", {
+      name: "Open Frontend Engineer at Acme",
+    });
+
+    expect(openButton).toHaveAttribute(
+      "data-application-opener",
+      "application-1",
+    );
+    expect(openButton.querySelector("div, h3, p")).toBeNull();
+    expect(openButton).toHaveTextContent("Frontend Engineer");
+    expect(openButton).toHaveTextContent("Acme");
   });
 
   it("disables both card controls when dragging is disabled", async () => {

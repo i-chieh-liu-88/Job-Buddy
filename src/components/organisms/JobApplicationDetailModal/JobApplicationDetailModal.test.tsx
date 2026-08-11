@@ -101,6 +101,48 @@ describe("JobApplicationDetailModal", () => {
     expect(props.onSave).not.toHaveBeenCalled();
   });
 
+  it("focuses the first custom-invalid field and associates required errors", async () => {
+    const user = userEvent.setup();
+    const { props } = renderModal();
+    const companyInput = screen.getByLabelText("Company");
+    const positionInput = screen.getByLabelText("Position");
+
+    await user.clear(companyInput);
+    await user.type(companyInput, "   ");
+    await user.clear(positionInput);
+    await user.type(positionInput, "   ");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(companyInput).toHaveFocus();
+    expect(companyInput).toHaveAttribute("aria-invalid", "true");
+    expect(companyInput).toHaveAttribute(
+      "aria-describedby",
+      "application-company-error",
+    );
+    expect(screen.getByText("Company is required.")).toHaveAttribute(
+      "id",
+      "application-company-error",
+    );
+    expect(positionInput).toHaveAttribute("aria-invalid", "true");
+    expect(positionInput).toHaveAttribute(
+      "aria-describedby",
+      "application-position-error",
+    );
+    expect(screen.getByText("Position is required.")).toHaveAttribute(
+      "id",
+      "application-position-error",
+    );
+    expect(props.onSave).not.toHaveBeenCalled();
+
+    await user.clear(companyInput);
+    await user.type(companyInput, "Acme");
+    expect(companyInput).not.toHaveAttribute("aria-invalid");
+    expect(companyInput).not.toHaveAttribute("aria-describedby");
+
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(positionInput).toHaveFocus();
+  });
+
   it("normalizes the edited draft and closes after saving", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn<(input: UpdateJobApplicationInput) => Promise<unknown>>()
@@ -187,6 +229,22 @@ describe("JobApplicationDetailModal", () => {
     expect(screen.getByRole("dialog", { hidden: true })).not.toHaveAttribute(
       "open",
     );
+  });
+
+  it("moves focus into delete confirmation and restores it when cancelled", async () => {
+    const user = userEvent.setup();
+    renderModal();
+
+    expect(screen.getByLabelText("Company")).toHaveFocus();
+    const deleteButton = screen.getByRole("button", { name: "Delete" });
+    await user.click(deleteButton);
+
+    expect(screen.getByRole("button", { name: "Confirm delete" })).toHaveFocus();
+    expect(screen.getByRole("alert")).toHaveTextContent("Delete Acme?");
+
+    await user.click(screen.getByRole("button", { name: "Cancel delete" }));
+
+    expect(screen.getByRole("button", { name: "Delete" })).toHaveFocus();
   });
 
   it("keeps the dialog open after a rejected deletion", async () => {

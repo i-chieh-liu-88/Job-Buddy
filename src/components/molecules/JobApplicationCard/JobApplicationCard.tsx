@@ -3,30 +3,35 @@ import { CSS } from "@dnd-kit/utilities";
 import type { CSSProperties } from "react";
 import type { JobApplication } from "../../../types/database";
 
+export type SelectJobApplication = (
+  application: JobApplication,
+  opener: HTMLButtonElement,
+) => void;
+
 type JobApplicationCardProps = {
   application: JobApplication;
   isDisabled?: boolean;
-  onSelect: (application: JobApplication) => void;
+  onSelect: SelectJobApplication;
 };
 
 function JobApplicationCardContent({
   application,
 }: Pick<JobApplicationCardProps, "application">) {
   return (
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h3 className="truncate font-semibold text-slate-900">
+    <span className="flex items-start justify-between gap-3">
+      <span className="min-w-0">
+        <span className="block truncate font-semibold text-slate-900">
           {application.position}
-        </h3>
-        <p className="mt-1 truncate text-sm text-slate-600">
+        </span>
+        <span className="mt-1 block truncate text-sm text-slate-600">
           {application.company}
-        </p>
-      </div>
+        </span>
+      </span>
       <span
         className="mt-1 size-2.5 shrink-0 rounded-full bg-slate-400"
         aria-label={`Status: ${application.status}`}
       />
-    </div>
+    </span>
   );
 }
 
@@ -79,8 +84,9 @@ export function JobApplicationCard({
         type="button"
         className="min-w-0 flex-1 p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600 disabled:cursor-not-allowed"
         aria-label={`Open ${application.position} at ${application.company}`}
+        data-application-opener={application.id}
         disabled={isDisabled}
-        onClick={() => onSelect(application)}
+        onClick={(event) => onSelect(application, event.currentTarget)}
       >
         <JobApplicationCardContent application={application} />
       </button>

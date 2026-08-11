@@ -1,5 +1,5 @@
 import { UserButton } from "@clerk/clerk-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { JobApplicationDetailModal } from "../../components/organisms/JobApplicationDetailModal/JobApplicationDetailModal";
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
@@ -28,27 +28,75 @@ function formatQueryError(error: unknown) {
   return details.length > 0 ? details.join(" · ") : "Unknown query error";
 }
 
+function findApplicationOpener(applicationId: string) {
+  return Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-application-opener]"),
+  ).find(
+    (candidate) => candidate.dataset.applicationOpener === applicationId,
+  );
+}
+
 export function KanbanBoardPage() {
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplication | null>(null);
+  const selectedApplicationOpenerRef = useRef<HTMLButtonElement | null>(null);
+  const pendingFocusRestorationRef = useRef<{
+    applicationId: string;
+    opener: HTMLButtonElement;
+  } | null>(null);
+  const applicationsHeadingRef = useRef<HTMLHeadingElement>(null);
   const applicationsQuery = useJobApplications();
   const reorderApplications = useReorderJobApplications();
   const updateApplication = useUpdateJobApplication();
   const deleteApplication = useDeleteJobApplication();
+  const isDetailOpen = selectedApplication !== null;
+
+  useEffect(() => {
+    if (isDetailOpen || !pendingFocusRestorationRef.current) return;
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      const focusRestoration = pendingFocusRestorationRef.current;
+      if (!focusRestoration) return;
+
+      if (focusRestoration.opener.isConnected) {
+        focusRestoration.opener.focus();
+      } else {
+        const replacementOpener = findApplicationOpener(
+          focusRestoration.applicationId,
+        );
+        (replacementOpener ?? applicationsHeadingRef.current)?.focus();
+      }
+
+      pendingFocusRestorationRef.current = null;
+    });
+
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, [isDetailOpen]);
 
   function handleReorder(result: ReorderResult) {
     reorderApplications.mutate(result);
   }
 
-  function handleSelectApplication(application: JobApplication) {
+  function handleSelectApplication(
+    application: JobApplication,
+    opener: HTMLButtonElement,
+  ) {
     updateApplication.reset();
     deleteApplication.reset();
+    pendingFocusRestorationRef.current = null;
+    selectedApplicationOpenerRef.current = opener;
     setSelectedApplication(application);
   }
 
   function handleCloseDetails() {
     updateApplication.reset();
     deleteApplication.reset();
+    if (selectedApplication && selectedApplicationOpenerRef.current) {
+      pendingFocusRestorationRef.current = {
+        applicationId: selectedApplication.id,
+        opener: selectedApplicationOpenerRef.current,
+      };
+    }
     setSelectedApplication(null);
   }
 
@@ -78,7 +126,11 @@ export function KanbanBoardPage() {
             <p className="text-sm font-medium uppercase tracking-wider text-blue-600">
               Job Buddy
             </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">
+            <h1
+              ref={applicationsHeadingRef}
+              className="mt-2 text-3xl font-bold tracking-tight"
+              tabIndex={-1}
+            >
               Applications
             </h1>
             <p className="mt-2 text-slate-600">

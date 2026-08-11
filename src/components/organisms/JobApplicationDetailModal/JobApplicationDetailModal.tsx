@@ -42,6 +42,11 @@ export function JobApplicationDetailModal({
   onSave,
 }: JobApplicationDetailModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const companyInputRef = useRef<HTMLInputElement>(null);
+  const positionInputRef = useRef<HTMLInputElement>(null);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const confirmDeleteButtonRef = useRef<HTMLButtonElement>(null);
+  const hasOpenedDeleteConfirmationRef = useRef(false);
   const [company, setCompany] = useState(application.company);
   const [position, setPosition] = useState(application.position);
   const [jobUrl, setJobUrl] = useState(application.job_url ?? "");
@@ -62,6 +67,18 @@ export function JobApplicationDetailModal({
   useEffect(() => {
     dialogRef.current?.showModal();
   }, []);
+
+  useEffect(() => {
+    if (isDeleteConfirmationVisible) {
+      hasOpenedDeleteConfirmationRef.current = true;
+      confirmDeleteButtonRef.current?.focus();
+      return;
+    }
+
+    if (hasOpenedDeleteConfirmationRef.current) {
+      deleteButtonRef.current?.focus();
+    }
+  }, [isDeleteConfirmationVisible]);
 
   function closeDialog() {
     dialogRef.current?.close();
@@ -97,6 +114,11 @@ export function JobApplicationDetailModal({
 
     if (requiredFieldErrors.company || requiredFieldErrors.position) {
       setFieldErrors(requiredFieldErrors);
+      if (requiredFieldErrors.company) {
+        companyInputRef.current?.focus();
+      } else {
+        positionInputRef.current?.focus();
+      }
       return;
     }
 
@@ -166,7 +188,12 @@ export function JobApplicationDetailModal({
           Company
         </label>
         <input
+          ref={companyInputRef}
           autoFocus
+          aria-describedby={
+            fieldErrors.company ? "application-company-error" : undefined
+          }
+          aria-invalid={fieldErrors.company ? true : undefined}
           className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
           disabled={isBusy}
           id="application-company"
@@ -182,11 +209,20 @@ export function JobApplicationDetailModal({
           }}
           onInvalid={handleInvalid}
         />
-        {fieldErrors.company ? <p role="alert">{fieldErrors.company}</p> : null}
+        {fieldErrors.company ? (
+          <p id="application-company-error" role="alert">
+            {fieldErrors.company}
+          </p>
+        ) : null}
         <label className="block text-sm font-medium" htmlFor="application-position">
           Position
         </label>
         <input
+          ref={positionInputRef}
+          aria-describedby={
+            fieldErrors.position ? "application-position-error" : undefined
+          }
+          aria-invalid={fieldErrors.position ? true : undefined}
           className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
           disabled={isBusy}
           id="application-position"
@@ -202,7 +238,11 @@ export function JobApplicationDetailModal({
           }}
           onInvalid={handleInvalid}
         />
-        {fieldErrors.position ? <p role="alert">{fieldErrors.position}</p> : null}
+        {fieldErrors.position ? (
+          <p id="application-position-error" role="alert">
+            {fieldErrors.position}
+          </p>
+        ) : null}
         <label className="block text-sm font-medium" htmlFor="application-job-url">
           Job URL
         </label>
@@ -276,7 +316,7 @@ export function JobApplicationDetailModal({
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5">
           {isDeleteConfirmationVisible ? (
             <div className="flex flex-wrap items-center gap-2">
-              <p>Delete {application.company}?</p>
+              <p role="alert">Delete {application.company}?</p>
               <button
                 type="button"
                 disabled={isBusy}
@@ -284,12 +324,18 @@ export function JobApplicationDetailModal({
               >
                 Cancel delete
               </button>
-              <button type="button" disabled={isBusy} onClick={handleDelete}>
+              <button
+                ref={confirmDeleteButtonRef}
+                type="button"
+                disabled={isBusy}
+                onClick={handleDelete}
+              >
                 Confirm delete
               </button>
             </div>
           ) : (
             <button
+              ref={deleteButtonRef}
               type="button"
               disabled={isBusy}
               onClick={() => setIsDeleteConfirmationVisible(true)}

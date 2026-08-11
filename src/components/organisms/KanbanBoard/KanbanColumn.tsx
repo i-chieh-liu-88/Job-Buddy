@@ -4,13 +4,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import type { JobApplication, JobApplicationStatus } from "../../../types/database";
-import { JobApplicationCard } from "../../molecules/JobApplicationCard/JobApplicationCard";
+import {
+  JobApplicationCard,
+  type SelectJobApplication,
+} from "../../molecules/JobApplicationCard/JobApplicationCard";
 
 type KanbanColumnProps = {
   applications: JobApplication[];
   isDisabled: boolean;
   label: string;
-  onSelectApplication: (application: JobApplication) => void;
+  onSelectApplication: SelectJobApplication;
   status: JobApplicationStatus;
 };
 

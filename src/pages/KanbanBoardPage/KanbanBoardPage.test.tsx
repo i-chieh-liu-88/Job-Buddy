@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobApplication } from "../../types/database";
@@ -53,6 +53,15 @@ const applications: JobApplication[] = [
   },
 ];
 
+function createDeferredMutation() {
+  let resolveMutation!: () => void;
+  const promise = new Promise<unknown>((resolve) => {
+    resolveMutation = () => resolve(undefined);
+  });
+
+  return { promise, resolve: resolveMutation };
+}
+
 vi.mock("@clerk/clerk-react", () => ({
   UserButton: () => <button type="button" aria-label="Account menu" />,
 }));
@@ -99,11 +108,14 @@ describe("KanbanBoardPage", () => {
 
   it("appends a moved application after destination cards before saving", async () => {
     const user = userEvent.setup();
-    render(<KanbanBoardPage />);
+    const deferredUpdate = createDeferredMutation();
+    updateMutateAsync.mockReturnValue(deferredUpdate.promise);
+    const { rerender } = render(<KanbanBoardPage />);
+    const originalOpener = screen.getByRole("button", {
+      name: "Open Frontend Engineer at Acme",
+    });
 
-    await user.click(
-      screen.getByRole("button", { name: "Open Frontend Engineer at Acme" }),
-    );
+    await user.click(originalOpener);
 
     expect(
       screen.getByRole("heading", { name: "Edit Frontend Engineer" }),
@@ -124,16 +136,42 @@ describe("KanbanBoardPage", () => {
         order_index: 3_000,
       });
     });
+
+    useJobApplicationsMock.mockReturnValue({
+      data: applications.map((application) =>
+        application.id === "application-1"
+          ? { ...application, order_index: 3_000, status: "interview" as const }
+          : application,
+      ),
+      error: null,
+      isError: false,
+      isPending: false,
+    });
+    rerender(<KanbanBoardPage />);
+
+    const replacementOpener = screen.getByRole("button", {
+      name: "Open Frontend Engineer at Acme",
+    });
+    expect(replacementOpener).not.toBe(originalOpener);
+    expect(originalOpener).not.toBeInTheDocument();
+
+    await act(async () => {
+      deferredUpdate.resolve();
+      await deferredUpdate.promise;
+    });
+
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(replacementOpener).toHaveFocus());
   });
 
   it("resets mutations and closes without saving or deleting when cancelled", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
+    const originalOpener = screen.getByRole("button", {
+      name: "Open Frontend Engineer at Acme",
+    });
 
-    await user.click(
-      screen.getByRole("button", { name: "Open Frontend Engineer at Acme" }),
-    );
+    await user.click(originalOpener);
 
     expect(updateReset).toHaveBeenCalledOnce();
     expect(deleteReset).toHaveBeenCalledOnce();
@@ -144,6 +182,7 @@ describe("KanbanBoardPage", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(updateReset).toHaveBeenCalledTimes(2);
     expect(deleteReset).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(originalOpener).toHaveFocus());
   });
 
   it("preserves the order index when saving in the same status", async () => {
@@ -163,7 +202,12 @@ describe("KanbanBoardPage", () => {
 
   it("requires delete confirmation before deleting the selected application", async () => {
     const user = userEvent.setup();
-    render(<KanbanBoardPage />);
+    const deferredDelete = createDeferredMutation();
+    deleteMutateAsync.mockReturnValue(deferredDelete.promise);
+    const { rerender } = render(<KanbanBoardPage />);
+    const fallbackHeading = screen.getByRole("heading", {
+      name: "Applications",
+    });
 
     await user.click(
       screen.getByRole("button", { name: "Open Frontend Engineer at Acme" }),
@@ -176,7 +220,28 @@ describe("KanbanBoardPage", () => {
     await waitFor(() => {
       expect(deleteMutateAsync).toHaveBeenCalledWith("application-1");
     });
+
+    useJobApplicationsMock.mockReturnValue({
+      data: applications.slice(1),
+      error: null,
+      isError: false,
+      isPending: false,
+    });
+    rerender(<KanbanBoardPage />);
+    expect(
+      screen.queryByRole("button", {
+        name: "Open Frontend Engineer at Acme",
+      }),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      deferredDelete.resolve();
+      await deferredDelete.promise;
+    });
+
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(fallbackHeading).toHaveAttribute("tabindex", "-1");
+    await waitFor(() => expect(fallbackHeading).toHaveFocus());
   });
 
   it("keeps the dialog visible and shows a save error after a rejected update", async () => {

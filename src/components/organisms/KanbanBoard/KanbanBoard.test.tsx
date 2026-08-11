@@ -75,11 +75,12 @@ describe("KanbanBoard", () => {
       />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Open Frontend Engineer at Acme" }),
-    );
+    const opener = screen.getByRole("button", {
+      name: "Open Frontend Engineer at Acme",
+    });
+    await user.click(opener);
 
-    expect(onSelectApplication).toHaveBeenCalledWith(applications[0]);
+    expect(onSelectApplication).toHaveBeenCalledWith(applications[0], opener);
   });
 
   it("keeps the card selection control safe when no page callback is provided", async () => {

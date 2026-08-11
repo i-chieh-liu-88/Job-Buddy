@@ -11,7 +11,10 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useState } from "react";
-import { JobApplicationCardPreview } from "../../molecules/JobApplicationCard/JobApplicationCard";
+import {
+  JobApplicationCardPreview,
+  type SelectJobApplication,
+} from "../../molecules/JobApplicationCard/JobApplicationCard";
 import type {
   JobApplication,
   JobApplicationStatus,
@@ -33,13 +36,13 @@ const KANBAN_COLUMNS: ReadonlyArray<{
   { status: "rejected", label: "Rejected" },
 ];
 
-const noopSelectApplication = () => {};
+const noopSelectApplication: SelectJobApplication = () => {};
 
 type KanbanBoardProps = {
   applications: JobApplication[];
   isUpdating?: boolean;
   onReorder: (result: ReorderResult) => void;
-  onSelectApplication?: (application: JobApplication) => void;
+  onSelectApplication?: SelectJobApplication;
 };
 
 export function KanbanBoard({
