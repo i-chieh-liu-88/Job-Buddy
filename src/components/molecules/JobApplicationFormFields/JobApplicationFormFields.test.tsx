@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { JobApplicationFormFields } from "./JobApplicationFormFields";
 import type {
@@ -41,6 +41,26 @@ function renderFields({
 }
 
 describe("JobApplicationFormFields", () => {
+  it("groups every editable field as application details", () => {
+    renderFields();
+
+    const details = screen.getByRole("group", {
+      name: "Application details",
+    });
+
+    for (const label of [
+      "Company",
+      "Position",
+      "Job URL",
+      "Status",
+      "Applied date",
+      "Notes",
+      "Resume version",
+    ]) {
+      expect(within(details).getByLabelText(label)).toBeVisible();
+    }
+  });
+
   it("renders all editable values and the five supported statuses", () => {
     renderFields();
 
