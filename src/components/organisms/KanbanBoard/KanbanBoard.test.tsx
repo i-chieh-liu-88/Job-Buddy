@@ -48,18 +48,18 @@ describe("KanbanBoard", () => {
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(5);
 
     const savedColumn = screen
-      .getByRole("heading", { name: "Saved" })
+      .getByRole("heading", { name: "Saved (1)" })
       .closest("section");
     const interviewColumn = screen
-      .getByRole("heading", { name: "Interview" })
+      .getByRole("heading", { name: "Interview (1)" })
       .closest("section");
 
     expect(savedColumn).not.toBeNull();
     expect(interviewColumn).not.toBeNull();
     expect(within(savedColumn!).getByText("Frontend Engineer")).toBeVisible();
     expect(within(interviewColumn!).getByText("Product Engineer")).toBeVisible();
-    expect(screen.getByRole("region", { name: "Offer" })).toHaveTextContent(
-      "Drop a card here",
+    expect(screen.getByRole("region", { name: "Offer (0)" })).toHaveTextContent(
+      "No applications yet",
     );
   });
 

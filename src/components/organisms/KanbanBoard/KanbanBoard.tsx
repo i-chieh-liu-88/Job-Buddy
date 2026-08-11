@@ -17,24 +17,16 @@ import {
 } from "../../molecules/JobApplicationCard/JobApplicationCard";
 import type {
   JobApplication,
-  JobApplicationStatus,
 } from "../../../types/database";
+import {
+  JOB_APPLICATION_STATUS_ORDER,
+  JOB_APPLICATION_STATUS_PRESENTATION,
+} from "../../../lib/jobApplicationStatusPresentation";
 import { KanbanColumn } from "./KanbanColumn";
 import {
   reorderApplications,
   type ReorderResult,
 } from "./reorderApplications";
-
-const KANBAN_COLUMNS: ReadonlyArray<{
-  status: JobApplicationStatus;
-  label: string;
-}> = [
-  { status: "saved", label: "Saved" },
-  { status: "applied", label: "Applied" },
-  { status: "interview", label: "Interview" },
-  { status: "offer", label: "Offer" },
-  { status: "rejected", label: "Rejected" },
-];
 
 const noopSelectApplication: SelectJobApplication = () => {};
 
@@ -84,14 +76,15 @@ export function KanbanBoard({
       onDragCancel={() => setActiveId(null)}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid min-w-max grid-cols-5 gap-4">
-        {KANBAN_COLUMNS.map(({ label, status }) => {
+      <div className="flex min-w-max gap-4">
+        {JOB_APPLICATION_STATUS_ORDER.map((status) => {
+          const { label } = JOB_APPLICATION_STATUS_PRESENTATION[status];
           const columnApplications = applications
             .filter((application) => application.status === status)
             .sort((left, right) => left.order_index - right.order_index);
 
           return (
-            <div key={status} className="w-72">
+            <div key={status} className="w-[19rem] shrink-0">
               <KanbanColumn
                 applications={columnApplications}
                 isDisabled={isUpdating}
@@ -105,7 +98,7 @@ export function KanbanBoard({
       </div>
       <DragOverlay>
         {activeApplication ? (
-          <div className="w-72">
+          <div className="w-[19rem]">
             <JobApplicationCardPreview application={activeApplication} />
           </div>
         ) : null}
