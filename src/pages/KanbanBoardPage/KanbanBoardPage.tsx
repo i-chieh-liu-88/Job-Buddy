@@ -1,10 +1,16 @@
 import { UserButton } from "@clerk/clerk-react";
+import { useState } from "react";
+import { JobApplicationDetailModal } from "../../components/organisms/JobApplicationDetailModal/JobApplicationDetailModal";
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
+  useDeleteJobApplication,
   useJobApplications,
   useReorderJobApplications,
+  useUpdateJobApplication,
 } from "../../hooks/useJobApplications";
+import type { UpdateJobApplicationInput } from "../../hooks/useJobApplications";
 import type { ReorderResult } from "../../components/organisms/KanbanBoard/reorderApplications";
+import type { JobApplication } from "../../types/database";
 
 const QUERY_ERROR_FIELDS = ["name", "code", "message"] as const;
 
@@ -23,11 +29,45 @@ function formatQueryError(error: unknown) {
 }
 
 export function KanbanBoardPage() {
+  const [selectedApplication, setSelectedApplication] =
+    useState<JobApplication | null>(null);
   const applicationsQuery = useJobApplications();
   const reorderApplications = useReorderJobApplications();
+  const updateApplication = useUpdateJobApplication();
+  const deleteApplication = useDeleteJobApplication();
 
   function handleReorder(result: ReorderResult) {
     reorderApplications.mutate(result);
+  }
+
+  function handleSelectApplication(application: JobApplication) {
+    updateApplication.reset();
+    deleteApplication.reset();
+    setSelectedApplication(application);
+  }
+
+  function handleCloseDetails() {
+    updateApplication.reset();
+    deleteApplication.reset();
+    setSelectedApplication(null);
+  }
+
+  async function handleSaveApplication(input: UpdateJobApplicationInput) {
+    if (input.status === selectedApplication?.status) {
+      return updateApplication.mutateAsync(input);
+    }
+
+    const destinationOrderIndexes = (applicationsQuery.data ?? [])
+      .filter(
+        (application) =>
+          application.id !== input.id && application.status === input.status,
+      )
+      .map((application) => application.order_index);
+
+    return updateApplication.mutateAsync({
+      ...input,
+      order_index: Math.max(0, ...destinationOrderIndexes) + 1_000,
+    });
   }
 
   return (
@@ -67,6 +107,7 @@ export function KanbanBoardPage() {
               applications={applicationsQuery.data ?? []}
               isUpdating={reorderApplications.isPending}
               onReorder={handleReorder}
+              onSelectApplication={handleSelectApplication}
             />
           </div>
         )}
@@ -75,6 +116,20 @@ export function KanbanBoardPage() {
           <p role="alert" className="mt-4 text-sm text-red-700">
             The card could not be moved. Please try again.
           </p>
+        ) : null}
+
+        {selectedApplication ? (
+          <JobApplicationDetailModal
+            key={selectedApplication.id}
+            application={selectedApplication}
+            hasDeleteError={deleteApplication.isError}
+            hasSaveError={updateApplication.isError}
+            isDeleting={deleteApplication.isPending}
+            isSaving={updateApplication.isPending}
+            onClose={handleCloseDetails}
+            onDelete={(id) => deleteApplication.mutateAsync(id)}
+            onSave={handleSaveApplication}
+          />
         ) : null}
       </div>
     </main>
