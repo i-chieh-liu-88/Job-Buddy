@@ -1,3 +1,4 @@
+import { UserButton } from "@clerk/clerk-react";
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
   useJobApplications,
@@ -16,16 +17,19 @@ export function KanbanBoardPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[96rem]">
-        <header className="mb-8">
-          <p className="text-sm font-medium uppercase tracking-wider text-blue-600">
-            Job Buddy
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">
-            Applications
-          </h1>
-          <p className="mt-2 text-slate-600">
-            Track every opportunity from saved to final decision.
-          </p>
+        <header className="mb-8 flex items-start justify-between gap-6">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wider text-blue-600">
+              Job Buddy
+            </p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              Applications
+            </h1>
+            <p className="mt-2 text-slate-600">
+              Track every opportunity from saved to final decision.
+            </p>
+          </div>
+          <UserButton />
         </header>
 
         {applicationsQuery.isPending ? (
