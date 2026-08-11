@@ -2,6 +2,10 @@ import { UserButton } from "@clerk/clerk-react";
 import { useEffect, useRef, useState } from "react";
 import { AddJobApplicationModal } from "../../components/organisms/AddJobApplicationModal/AddJobApplicationModal";
 import type { JobApplicationFormData } from "../../components/molecules/JobApplicationFormFields/jobApplicationFormSchema";
+import {
+  ApplicationNavigation,
+  type ApplicationStageCounts,
+} from "../../components/organisms/ApplicationNavigation/ApplicationNavigation";
 import { JobApplicationDetailModal } from "../../components/organisms/JobApplicationDetailModal/JobApplicationDetailModal";
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
@@ -13,6 +17,8 @@ import {
 } from "../../hooks/useJobApplications";
 import type { UpdateJobApplicationInput } from "../../hooks/useJobApplications";
 import type { ReorderResult } from "../../components/organisms/KanbanBoard/reorderApplications";
+import { JOB_APPLICATION_STATUS_ORDER } from "../../lib/jobApplicationStatusPresentation";
+import { ApplicationShell } from "../../layouts/ApplicationShell/ApplicationShell";
 import type { JobApplication } from "../../types/database";
 
 const QUERY_ERROR_FIELDS = ["name", "code", "message"] as const;
@@ -43,7 +49,7 @@ export function KanbanBoardPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplication | null>(null);
-  const addApplicationButtonRef = useRef<HTMLButtonElement>(null);
+  const addApplicationOpenerRef = useRef<HTMLButtonElement | null>(null);
   const pendingAddFocusRestorationRef = useRef(false);
   const selectedApplicationOpenerRef = useRef<HTMLButtonElement | null>(null);
   const pendingFocusRestorationRef = useRef<{
@@ -57,12 +63,22 @@ export function KanbanBoardPage() {
   const updateApplication = useUpdateJobApplication();
   const deleteApplication = useDeleteJobApplication();
   const isDetailOpen = selectedApplication !== null;
+  const applications = applicationsQuery.data ?? [];
+  const stageCounts = JOB_APPLICATION_STATUS_ORDER.reduce<ApplicationStageCounts>(
+    (counts, status) => ({
+      ...counts,
+      [status]: applications.filter(
+        (application) => application.status === status,
+      ).length,
+    }),
+    { saved: 0, applied: 0, interview: 0, offer: 0, rejected: 0 },
+  );
 
   useEffect(() => {
     if (isAddOpen || !pendingAddFocusRestorationRef.current) return;
 
     const animationFrameId = window.requestAnimationFrame(() => {
-      addApplicationButtonRef.current?.focus();
+      addApplicationOpenerRef.current?.focus();
       pendingAddFocusRestorationRef.current = false;
     });
 
@@ -95,9 +111,10 @@ export function KanbanBoardPage() {
     reorderApplications.mutate(result);
   }
 
-  function handleOpenAddApplication() {
+  function handleOpenAddApplication(opener: HTMLButtonElement) {
     createApplication.reset();
     pendingAddFocusRestorationRef.current = false;
+    addApplicationOpenerRef.current = opener;
     setIsAddOpen(true);
   }
 
@@ -108,7 +125,7 @@ export function KanbanBoardPage() {
   }
 
   async function handleCreateApplication(input: JobApplicationFormData) {
-    const destinationOrderIndexes = (applicationsQuery.data ?? [])
+    const destinationOrderIndexes = applications
       .filter((application) => application.status === input.status)
       .map((application) => application.order_index);
 
@@ -146,7 +163,7 @@ export function KanbanBoardPage() {
       return updateApplication.mutateAsync(input);
     }
 
-    const destinationOrderIndexes = (applicationsQuery.data ?? [])
+    const destinationOrderIndexes = applications
       .filter(
         (application) =>
           application.id !== input.id && application.status === input.status,
@@ -160,11 +177,21 @@ export function KanbanBoardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[96rem]">
-        <header className="mb-8 flex items-start justify-between gap-6">
+    <ApplicationShell
+      navigation={
+        <ApplicationNavigation
+          accountMenu={<UserButton />}
+          isAddDisabled={createApplication.isPending}
+          onAddApplication={handleOpenAddApplication}
+          stageCounts={stageCounts}
+        />
+      }
+    >
+      <div className="min-h-screen bg-canvas px-4 py-8 text-ink sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[96rem]">
+          <header className="mb-8">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-blue-600">
+            <p className="text-sm font-medium uppercase tracking-wider text-focus">
               Job Buddy
             </p>
             <h1
@@ -174,77 +201,66 @@ export function KanbanBoardPage() {
             >
               Applications
             </h1>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-muted">
               Track every opportunity from saved to final decision.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              ref={addApplicationButtonRef}
-              type="button"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={createApplication.isPending}
-              onClick={handleOpenAddApplication}
-            >
-              + Add Application
-            </button>
-            <UserButton />
-          </div>
-        </header>
+          </header>
 
-        {applicationsQuery.isPending ? (
-          <p role="status" className="text-slate-600">
-            Loading applications…
-          </p>
-        ) : applicationsQuery.isError ? (
-          <div role="alert" className="text-red-700">
-            <p>Could not load applications. Please try again.</p>
-            {import.meta.env.DEV ? (
-              <code className="mt-2 block whitespace-pre-wrap text-xs text-slate-600">
-                {formatQueryError(applicationsQuery.error)}
-              </code>
-            ) : null}
-          </div>
-        ) : (
-          <div className="overflow-x-auto pb-4">
-            <KanbanBoard
-              applications={applicationsQuery.data ?? []}
-              isUpdating={reorderApplications.isPending}
-              onReorder={handleReorder}
-              onSelectApplication={handleSelectApplication}
+          {applicationsQuery.isPending ? (
+            <p role="status" className="text-muted">
+              Loading applications…
+            </p>
+          ) : applicationsQuery.isError ? (
+            <div role="alert" className="text-danger">
+              <p>Could not load applications. Please try again.</p>
+              {import.meta.env.DEV ? (
+                <code className="mt-2 block whitespace-pre-wrap text-xs text-muted">
+                  {formatQueryError(applicationsQuery.error)}
+                </code>
+              ) : null}
+            </div>
+          ) : (
+            <div className="overflow-x-auto pb-4">
+              <KanbanBoard
+                applications={applications}
+                isUpdating={reorderApplications.isPending}
+                onReorder={handleReorder}
+                onSelectApplication={handleSelectApplication}
+              />
+            </div>
+          )}
+
+          {reorderApplications.isError ? (
+            <p role="alert" className="mt-4 text-sm text-danger">
+              The card could not be moved. Please try again.
+            </p>
+          ) : null}
+
+          {isAddOpen ? (
+            <AddJobApplicationModal
+              hasCreateError={createApplication.isError}
+              isCreating={createApplication.isPending}
+              onClose={handleCloseAddApplication}
+              onCreate={handleCreateApplication}
             />
-          </div>
-        )}
+          ) : null}
 
-        {reorderApplications.isError ? (
-          <p role="alert" className="mt-4 text-sm text-red-700">
-            The card could not be moved. Please try again.
-          </p>
-        ) : null}
-
-        {isAddOpen ? (
-          <AddJobApplicationModal
-            hasCreateError={createApplication.isError}
-            isCreating={createApplication.isPending}
-            onClose={handleCloseAddApplication}
-            onCreate={handleCreateApplication}
-          />
-        ) : null}
-
-        {selectedApplication ? (
-          <JobApplicationDetailModal
-            key={selectedApplication.id}
-            application={selectedApplication}
-            hasDeleteError={deleteApplication.isError}
-            hasSaveError={updateApplication.isError}
-            isDeleting={deleteApplication.isPending}
-            isSaving={updateApplication.isPending}
-            onClose={handleCloseDetails}
-            onDelete={(id) => deleteApplication.mutateAsync(id)}
-            onSave={handleSaveApplication}
-          />
-        ) : null}
+          {selectedApplication ? (
+            <JobApplicationDetailModal
+              key={selectedApplication.id}
+              application={selectedApplication}
+              hasDeleteError={deleteApplication.isError}
+              hasSaveError={updateApplication.isError}
+              isDeleting={deleteApplication.isPending}
+              isSaving={updateApplication.isPending}
+              onClose={handleCloseDetails}
+              onDelete={(id) => deleteApplication.mutateAsync(id)}
+              onSave={handleSaveApplication}
+            />
+          ) : null}
+        </div>
       </div>
-    </main>
+    </ApplicationShell>
   );
 }

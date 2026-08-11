@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobApplication } from "../../types/database";
@@ -122,12 +122,43 @@ describe("KanbanBoardPage", () => {
     });
   });
 
-  it("opens a fresh Add application dialog from the header", async () => {
+  it("shows the application workspace navigation with live stage counts", () => {
+    render(<KanbanBoardPage />);
+
+    const navigation = screen.getByRole("navigation", {
+      name: "Applications",
+    });
+
+    expect(
+      within(navigation).getByRole("link", { name: "Applications" }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      within(navigation).getByText("Saved").closest("li"),
+    ).toHaveTextContent("1");
+    expect(
+      within(navigation).getByText("Interview").closest("li"),
+    ).toHaveTextContent("1");
+  });
+
+  it("restores Add focus to the sidebar button that opened the dialog", async () => {
+    const user = userEvent.setup();
+    render(<KanbanBoardPage />);
+    const addButton = screen.getByRole("button", {
+      name: "Add application",
+    });
+
+    await user.click(addButton);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(addButton).toHaveFocus());
+  });
+
+  it("opens a fresh Add application dialog from the sidebar", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
 
     await user.click(
-      screen.getByRole("button", { name: "+ Add Application" }),
+      screen.getByRole("button", { name: "Add application" }),
     );
 
     expect(screen.getByRole("dialog", { name: "Add application" })).toBeVisible();
@@ -139,12 +170,16 @@ describe("KanbanBoardPage", () => {
   it("appends a new application after cards in the selected status", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
-    const addButton = screen.getByRole("button", { name: "+ Add Application" });
+    const addButton = screen.getByRole("button", { name: "Add application" });
 
     await user.click(addButton);
     await user.type(screen.getByLabelText("Company"), "  New Acme  ");
     await user.type(screen.getByLabelText("Position"), "  Staff Engineer  ");
-    await user.click(screen.getByRole("button", { name: "Add application" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Add application",
+      }),
+    );
 
     await waitFor(() => {
       expect(createMutateAsync).toHaveBeenCalledWith({
@@ -167,12 +202,16 @@ describe("KanbanBoardPage", () => {
     render(<KanbanBoardPage />);
 
     await user.click(
-      screen.getByRole("button", { name: "+ Add Application" }),
+      screen.getByRole("button", { name: "Add application" }),
     );
     await user.type(screen.getByLabelText("Company"), "Acme");
     await user.type(screen.getByLabelText("Position"), "Engineer");
     await user.selectOptions(screen.getByLabelText("Status"), "offer");
-    await user.click(screen.getByRole("button", { name: "Add application" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Add application",
+      }),
+    );
 
     await waitFor(() => expect(createMutateAsync).toHaveBeenCalledOnce());
     expect(createMutateAsync).toHaveBeenCalledWith(
@@ -183,7 +222,7 @@ describe("KanbanBoardPage", () => {
   it("cancels creation without a mutation and restores Add focus", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
-    const addButton = screen.getByRole("button", { name: "+ Add Application" });
+    const addButton = screen.getByRole("button", { name: "Add application" });
 
     await user.click(addButton);
     await user.type(screen.getByLabelText("Company"), "Unsaved");
@@ -201,11 +240,15 @@ describe("KanbanBoardPage", () => {
     const { rerender } = render(<KanbanBoardPage />);
 
     await user.click(
-      screen.getByRole("button", { name: "+ Add Application" }),
+      screen.getByRole("button", { name: "Add application" }),
     );
     await user.type(screen.getByLabelText("Company"), "Acme draft");
     await user.type(screen.getByLabelText("Position"), "Engineer");
-    await user.click(screen.getByRole("button", { name: "Add application" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Add application",
+      }),
+    );
     await waitFor(() => expect(createMutateAsync).toHaveBeenCalledOnce());
 
     useCreateJobApplicationMock.mockReturnValue({
