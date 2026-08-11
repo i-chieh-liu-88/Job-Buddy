@@ -6,6 +6,22 @@ import {
 } from "../../hooks/useJobApplications";
 import type { ReorderResult } from "../../components/organisms/KanbanBoard/reorderApplications";
 
+const QUERY_ERROR_FIELDS = ["name", "code", "message"] as const;
+
+function formatQueryError(error: unknown) {
+  if (typeof error !== "object" || error === null) {
+    return "Unknown query error";
+  }
+
+  const errorRecord = error as Record<string, unknown>;
+  const details = QUERY_ERROR_FIELDS.flatMap((field) => {
+    const value = errorRecord[field];
+    return typeof value === "string" && value.length > 0 ? [value] : [];
+  });
+
+  return details.length > 0 ? details.join(" · ") : "Unknown query error";
+}
+
 export function KanbanBoardPage() {
   const applicationsQuery = useJobApplications();
   const reorderApplications = useReorderJobApplications();
@@ -37,9 +53,14 @@ export function KanbanBoardPage() {
             Loading applications…
           </p>
         ) : applicationsQuery.isError ? (
-          <p role="alert" className="text-red-700">
-            Could not load applications. Please try again.
-          </p>
+          <div role="alert" className="text-red-700">
+            <p>Could not load applications. Please try again.</p>
+            {import.meta.env.DEV ? (
+              <code className="mt-2 block whitespace-pre-wrap text-xs text-slate-600">
+                {formatQueryError(applicationsQuery.error)}
+              </code>
+            ) : null}
+          </div>
         ) : (
           <div className="overflow-x-auto pb-4">
             <KanbanBoard
