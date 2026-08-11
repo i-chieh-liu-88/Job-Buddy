@@ -5,6 +5,14 @@ export type JobApplicationStatus =
   | "offer"
   | "rejected";
 
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
 export type JobApplication = {
   id: string;
   user_id: string;
@@ -46,7 +54,12 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      reorder_job_applications: {
+        Args: { p_updates: Json };
+        Returns: JobApplication[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
