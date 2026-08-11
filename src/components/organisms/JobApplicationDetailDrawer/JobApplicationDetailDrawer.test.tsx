@@ -10,7 +10,7 @@ import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { UpdateJobApplicationInput } from "../../../hooks/useJobApplications";
 import type { JobApplication } from "../../../types/database";
-import { JobApplicationDetailModal } from "./JobApplicationDetailModal";
+import { JobApplicationDetailDrawer } from "./JobApplicationDetailDrawer";
 
 const application: JobApplication = {
   id: "application-1",
@@ -27,22 +27,24 @@ const application: JobApplication = {
   updated_at: "2026-08-11T00:00:00.000Z",
 };
 
-type ModalProps = ComponentProps<typeof JobApplicationDetailModal>;
+type DrawerProps = ComponentProps<typeof JobApplicationDetailDrawer>;
 
-function renderModal(overrides: Partial<ModalProps> = {}) {
-  const props: ModalProps = {
+function renderDrawer(overrides: Partial<DrawerProps> = {}) {
+  const props: DrawerProps = {
     application,
     hasDeleteError: false,
     hasSaveError: false,
     isDeleting: false,
     isSaving: false,
-    onClose: vi.fn(),
     onDelete: vi.fn().mockResolvedValue(undefined),
+    onExitComplete: vi.fn(),
+    onOpenChange: vi.fn(),
     onSave: vi.fn().mockResolvedValue(undefined),
+    open: true,
     ...overrides,
   };
   const rendered = render(
-    <JobApplicationDetailModal
+    <JobApplicationDetailDrawer
       {...props}
     />,
   );
@@ -50,9 +52,22 @@ function renderModal(overrides: Partial<ModalProps> = {}) {
   return { ...rendered, props };
 }
 
-describe("JobApplicationDetailModal", () => {
+describe("JobApplicationDetailDrawer", () => {
+  it("renders a right-side single-column detail drawer", () => {
+    renderDrawer();
+    const drawer = screen.getByRole("dialog", {
+      name: "Edit Frontend Engineer",
+    });
+
+    expect(drawer).toHaveClass("right-0", "md:w-[32.5rem]");
+    expect(drawer).toHaveClass("w-[calc(100vw-0.5rem)]");
+    expect(
+      screen.getByRole("group", { name: "Application details" }),
+    ).not.toHaveClass("md:grid-cols-2");
+  });
+
   it("groups destructive, neutral, and primary application actions", () => {
-    renderModal();
+    renderDrawer();
 
     const actions = screen.getByRole("group", {
       name: "Application actions",
@@ -63,29 +78,19 @@ describe("JobApplicationDetailModal", () => {
     }
   });
 
-  it("focuses Company after native showModal moves focus", () => {
-    const showModal = vi
-      .spyOn(HTMLDialogElement.prototype, "showModal")
-      .mockImplementation(function showModalLikeBrowser(
-        this: HTMLDialogElement,
-      ) {
-        this.open = true;
-        this.querySelector("button")?.focus();
-      });
+  it("focuses Company after the drawer opens", async () => {
+    renderDrawer();
 
-    try {
-      renderModal();
-      expect(screen.getByLabelText("Company")).toHaveFocus();
-    } finally {
-      showModal.mockRestore();
-    }
+    await waitFor(() => expect(screen.getByLabelText("Company")).toHaveFocus());
   });
 
   it("prefills the application and closes through Cancel", async () => {
     const user = userEvent.setup();
-    const { props } = renderModal();
+    const { props } = renderDrawer();
 
-    expect(screen.getByRole("dialog")).toHaveAttribute("open");
+    expect(
+      screen.getByRole("dialog", { name: "Edit Frontend Engineer" }),
+    ).toHaveAttribute("aria-modal", "true");
     expect(
       screen.getByRole("heading", { name: "Edit Frontend Engineer" }),
     ).toBeVisible();
@@ -102,20 +107,29 @@ describe("JobApplicationDetailModal", () => {
 
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(props.onClose).toHaveBeenCalledOnce();
+    expect(props.onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("closes through the native cancel event when idle", () => {
-    const { props } = renderModal();
+  it("closes through Escape when idle", () => {
+    const { props } = renderDrawer();
 
-    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+    fireEvent.keyDown(document, { key: "Escape" });
 
-    expect(props.onClose).toHaveBeenCalledOnce();
+    expect(props.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("closes through the close control when idle", async () => {
+    const user = userEvent.setup();
+    const { props } = renderDrawer();
+
+    await user.click(screen.getByRole("button", { name: "Close drawer" }));
+
+    expect(props.onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("prevents saving when Company or Position is missing", async () => {
     const user = userEvent.setup();
-    const { props } = renderModal();
+    const { props } = renderDrawer();
 
     await user.clear(screen.getByLabelText("Company"));
     await user.clear(screen.getByLabelText("Position"));
@@ -127,7 +141,7 @@ describe("JobApplicationDetailModal", () => {
 
   it("prevents saving a whitespace-only Company after trimming", async () => {
     const user = userEvent.setup();
-    const { props } = renderModal();
+    const { props } = renderDrawer();
 
     await user.clear(screen.getByLabelText("Company"));
     await user.type(screen.getByLabelText("Company"), "   ");
@@ -138,7 +152,7 @@ describe("JobApplicationDetailModal", () => {
   });
 
   it("uses Zod instead of native browser validation", () => {
-    renderModal();
+    renderDrawer();
 
     expect(screen.getByRole("button", { name: "Save changes" }).closest("form"))
       .toHaveAttribute("novalidate");
@@ -146,7 +160,7 @@ describe("JobApplicationDetailModal", () => {
 
   it("associates, focuses, and clears a malformed URL error", async () => {
     const user = userEvent.setup();
-    const { props } = renderModal();
+    const { props } = renderDrawer();
     const jobUrlInput = screen.getByLabelText("Job URL");
 
     await user.clear(jobUrlInput);
@@ -172,7 +186,7 @@ describe("JobApplicationDetailModal", () => {
 
   it("focuses the first custom-invalid field and associates required errors", async () => {
     const user = userEvent.setup();
-    const { props } = renderModal();
+    const { props } = renderDrawer();
     const companyInput = screen.getByLabelText("Company");
     const positionInput = screen.getByLabelText("Position");
 
@@ -216,7 +230,7 @@ describe("JobApplicationDetailModal", () => {
     const user = userEvent.setup();
     const onSave = vi.fn<(input: UpdateJobApplicationInput) => Promise<unknown>>()
       .mockResolvedValue(undefined);
-    renderModal({ onSave });
+    const { props } = renderDrawer({ onSave });
 
     await user.clear(screen.getByLabelText("Company"));
     await user.type(screen.getByLabelText("Company"), "  New Acme  ");
@@ -244,15 +258,13 @@ describe("JobApplicationDetailModal", () => {
         resume_version: "v4",
       });
     });
-    expect(screen.getByRole("dialog", { hidden: true })).not.toHaveAttribute(
-      "open",
-    );
+    expect(props.onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("keeps the edited draft open after a rejected save", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockRejectedValue(new Error("save failed"));
-    const { rerender } = renderModal({ onSave });
+    const { rerender, props } = renderDrawer({ onSave });
 
     await user.clear(screen.getByLabelText("Company"));
     await user.type(screen.getByLabelText("Company"), "Edited Acme");
@@ -260,15 +272,17 @@ describe("JobApplicationDetailModal", () => {
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     rerender(
-      <JobApplicationDetailModal
+      <JobApplicationDetailDrawer
         application={application}
         hasDeleteError={false}
         hasSaveError
         isDeleting={false}
         isSaving={false}
-        onClose={vi.fn()}
         onDelete={vi.fn().mockResolvedValue(undefined)}
+        onExitComplete={props.onExitComplete}
+        onOpenChange={props.onOpenChange}
         onSave={onSave}
+        open
       />,
     );
 
@@ -276,13 +290,13 @@ describe("JobApplicationDetailModal", () => {
       screen.getByText("The application could not be saved. Please try again."),
     ).toBeVisible();
     expect(screen.getByLabelText("Company")).toHaveValue("Edited Acme");
-    expect(screen.getByRole("dialog")).toHaveAttribute("open");
+    expect(screen.getByRole("dialog")).toBeVisible();
   });
 
   it("requires a second delete confirmation and closes after deletion", async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn().mockResolvedValue(undefined);
-    renderModal({ onDelete });
+    const { props } = renderDrawer({ onDelete });
 
     await user.click(screen.getByRole("button", { name: "Delete" }));
 
@@ -295,14 +309,12 @@ describe("JobApplicationDetailModal", () => {
     await user.click(screen.getByRole("button", { name: "Confirm delete" }));
 
     await waitFor(() => expect(onDelete).toHaveBeenCalledWith("application-1"));
-    expect(screen.getByRole("dialog", { hidden: true })).not.toHaveAttribute(
-      "open",
-    );
+    expect(props.onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("moves focus into delete confirmation and restores it when cancelled", async () => {
     const user = userEvent.setup();
-    renderModal();
+    renderDrawer();
 
     expect(screen.getByLabelText("Company")).toHaveFocus();
     const deleteButton = screen.getByRole("button", { name: "Delete" });
@@ -324,40 +336,47 @@ describe("JobApplicationDetailModal", () => {
     expect(screen.getByRole("button", { name: "Delete" })).toHaveFocus();
   });
 
-  it("keeps the dialog open after a rejected deletion", async () => {
+  it("keeps the drawer open after a rejected deletion", async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn().mockRejectedValue(new Error("delete failed"));
-    const { rerender } = renderModal({ onDelete });
+    const { rerender, props } = renderDrawer({ onDelete });
 
     await user.click(screen.getByRole("button", { name: "Delete" }));
     await user.click(screen.getByRole("button", { name: "Confirm delete" }));
 
     await waitFor(() => expect(onDelete).toHaveBeenCalledOnce());
     rerender(
-      <JobApplicationDetailModal
+      <JobApplicationDetailDrawer
         application={application}
         hasDeleteError
         hasSaveError={false}
         isDeleting={false}
         isSaving={false}
-        onClose={vi.fn()}
         onDelete={onDelete}
+        onExitComplete={props.onExitComplete}
+        onOpenChange={props.onOpenChange}
         onSave={vi.fn().mockResolvedValue(undefined)}
+        open
       />,
     );
 
     expect(
       screen.getByText("The application could not be deleted. Please try again."),
     ).toBeVisible();
-    expect(screen.getByRole("dialog")).toHaveAttribute("open");
+    expect(screen.getByRole("dialog")).toBeVisible();
   });
 
-  it("disables controls while a mutation is pending", () => {
-    renderModal({ isSaving: true });
+  it("disables controls and blocks every closing action while pending", () => {
+    const { props } = renderDrawer({ isSaving: true });
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.click(screen.getByTestId("drawer-backdrop"));
 
     expect(screen.getByLabelText("Company")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Close drawer" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    expect(props.onOpenChange).not.toHaveBeenCalled();
   });
 });

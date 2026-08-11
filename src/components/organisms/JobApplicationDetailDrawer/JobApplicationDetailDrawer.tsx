@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { Drawer } from "../../atoms/Drawer/Drawer";
 import { JobApplicationFormFields } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import type { JobApplicationFormControl } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import {
@@ -15,15 +16,17 @@ import type {
 import type { UpdateJobApplicationInput } from "../../../hooks/useJobApplications";
 import type { JobApplication } from "../../../types/database";
 
-type JobApplicationDetailModalProps = {
+type JobApplicationDetailDrawerProps = {
   application: JobApplication;
   hasDeleteError: boolean;
   hasSaveError: boolean;
   isDeleting: boolean;
   isSaving: boolean;
-  onClose: () => void;
   onDelete: (id: string) => Promise<unknown>;
+  onExitComplete: () => void;
+  onOpenChange: (open: boolean) => void;
   onSave: (input: UpdateJobApplicationInput) => Promise<unknown>;
+  open: boolean;
 };
 
 const fieldOrder: JobApplicationFormField[] = [
@@ -39,17 +42,19 @@ const fieldOrder: JobApplicationFormField[] = [
 const buttonClassName =
   "inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
 
-export function JobApplicationDetailModal({
+export function JobApplicationDetailDrawer({
   application,
   hasDeleteError,
   hasSaveError,
   isDeleting,
   isSaving,
-  onClose,
   onDelete,
+  onExitComplete,
+  onOpenChange,
   onSave,
-}: JobApplicationDetailModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  open,
+}: JobApplicationDetailDrawerProps) {
+  const companyFocusRef = useRef<HTMLElement | null>(null);
   const fieldRefs = useRef<
     Partial<Record<JobApplicationFormField, JobApplicationFormControl>>
   >({});
@@ -66,11 +71,6 @@ export function JobApplicationDetailModal({
   const isBusy = isSaving || isDeleting;
 
   useEffect(() => {
-    dialogRef.current?.showModal();
-    fieldRefs.current.company?.focus();
-  }, []);
-
-  useEffect(() => {
     if (isDeleteConfirmationVisible) {
       hasOpenedDeleteConfirmationRef.current = true;
       confirmDeleteButtonRef.current?.focus();
@@ -82,8 +82,8 @@ export function JobApplicationDetailModal({
     }
   }, [isDeleteConfirmationVisible]);
 
-  function closeDialog() {
-    dialogRef.current?.close();
+  function requestClose() {
+    if (!isBusy) onOpenChange(false);
   }
 
   function handleFieldChange(field: JobApplicationFormField, value: string) {
@@ -111,7 +111,7 @@ export function JobApplicationDetailModal({
 
     try {
       await onSave({ id: application.id, ...result.data });
-      closeDialog();
+      onOpenChange(false);
     } catch {
       // The parent rerenders the error state after its mutation rejects.
     }
@@ -120,23 +120,21 @@ export function JobApplicationDetailModal({
   async function handleDelete() {
     try {
       await onDelete(application.id);
-      closeDialog();
+      onOpenChange(false);
     } catch {
       // The parent rerenders the error state after its mutation rejects.
     }
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      aria-describedby="application-detail-description"
-      aria-labelledby="application-detail-title"
-      className="m-auto max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-2xl overflow-hidden rounded-xl border border-line bg-canvas p-0 text-ink shadow-[0_24px_64px_rgba(30,31,33,0.18)] backdrop:bg-ink/30 backdrop:backdrop-blur-[1px] open:flex open:flex-col"
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!isBusy) closeDialog();
-      }}
-      onClose={onClose}
+    <Drawer
+      ariaLabel={`Edit ${application.position}`}
+      className="h-dvh w-[calc(100vw-0.5rem)] max-w-none md:w-[32.5rem] md:max-w-[calc(100vw-1rem)]"
+      dismissable={!isBusy}
+      initialFocusRef={companyFocusRef}
+      open={open}
+      onExitComplete={onExitComplete}
+      onOpenChange={onOpenChange}
     >
       <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4 md:px-6 md:py-5">
         <div>
@@ -155,10 +153,10 @@ export function JobApplicationDetailModal({
         </div>
         <button
           type="button"
-          aria-label="Close dialog"
+          aria-label="Close drawer"
           className="inline-flex size-10 shrink-0 items-center justify-center rounded-md text-xl leading-none text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
           disabled={isBusy}
-          onClick={closeDialog}
+          onClick={requestClose}
         >
           <span aria-hidden="true">×</span>
         </button>
@@ -173,10 +171,12 @@ export function JobApplicationDetailModal({
             disabled={isBusy}
             errors={fieldErrors}
             idPrefix="application"
+            layout="single-column"
             values={values}
             onChange={handleFieldChange}
             setFieldRef={(field, element) => {
               if (element) fieldRefs.current[field] = element;
+              if (field === "company") companyFocusRef.current = element;
             }}
           />
           {hasSaveError ? (
@@ -240,7 +240,7 @@ export function JobApplicationDetailModal({
               type="button"
               className={`${buttonClassName} border border-line bg-canvas text-ink hover:bg-hover`}
               disabled={isBusy}
-              onClick={closeDialog}
+              onClick={requestClose}
             >
               Cancel
             </button>
@@ -254,6 +254,6 @@ export function JobApplicationDetailModal({
           </div>
         </div>
       </form>
-    </dialog>
+    </Drawer>
   );
 }
