@@ -49,6 +49,7 @@ export function AddJobApplicationModal({
 
   useEffect(() => {
     dialogRef.current?.showModal();
+    fieldRefs.current.company?.focus();
   }, []);
 
   function closeDialog() {

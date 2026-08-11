@@ -21,6 +21,24 @@ function renderModal(overrides: Partial<ModalProps> = {}) {
 }
 
 describe("AddJobApplicationModal", () => {
+  it("focuses Company after native showModal moves focus", () => {
+    const showModal = vi
+      .spyOn(HTMLDialogElement.prototype, "showModal")
+      .mockImplementation(function showModalLikeBrowser(
+        this: HTMLDialogElement,
+      ) {
+        this.open = true;
+        this.querySelector("button")?.focus();
+      });
+
+    try {
+      renderModal();
+      expect(screen.getByLabelText("Company")).toHaveFocus();
+    } finally {
+      showModal.mockRestore();
+    }
+  });
+
   it("opens with a complete empty Saved draft and Company focused", () => {
     renderModal();
 

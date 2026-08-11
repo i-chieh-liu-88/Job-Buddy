@@ -45,6 +45,24 @@ function renderModal(overrides: Partial<ModalProps> = {}) {
 }
 
 describe("JobApplicationDetailModal", () => {
+  it("focuses Company after native showModal moves focus", () => {
+    const showModal = vi
+      .spyOn(HTMLDialogElement.prototype, "showModal")
+      .mockImplementation(function showModalLikeBrowser(
+        this: HTMLDialogElement,
+      ) {
+        this.open = true;
+        this.querySelector("button")?.focus();
+      });
+
+    try {
+      renderModal();
+      expect(screen.getByLabelText("Company")).toHaveFocus();
+    } finally {
+      showModal.mockRestore();
+    }
+  });
+
   it("prefills the application and closes through Cancel", async () => {
     const user = userEvent.setup();
     const { props } = renderModal();
