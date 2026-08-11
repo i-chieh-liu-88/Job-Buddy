@@ -134,12 +134,16 @@ describe("KanbanBoardPage", () => {
     await user.click(
       screen.getByRole("button", { name: "Open Frontend Engineer at Acme" }),
     );
+
+    expect(updateReset).toHaveBeenCalledOnce();
+    expect(deleteReset).toHaveBeenCalledOnce();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(updateMutateAsync).not.toHaveBeenCalled();
     expect(deleteMutateAsync).not.toHaveBeenCalled();
-    expect(updateReset).toHaveBeenCalled();
-    expect(deleteReset).toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(updateReset).toHaveBeenCalledTimes(2);
+    expect(deleteReset).toHaveBeenCalledTimes(2);
   });
 
   it("preserves the order index when saving in the same status", async () => {
