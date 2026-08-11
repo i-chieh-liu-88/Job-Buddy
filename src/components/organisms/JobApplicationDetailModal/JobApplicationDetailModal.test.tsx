@@ -101,6 +101,39 @@ describe("JobApplicationDetailModal", () => {
     expect(props.onSave).not.toHaveBeenCalled();
   });
 
+  it("uses Zod instead of native browser validation", () => {
+    renderModal();
+
+    expect(screen.getByRole("button", { name: "Save changes" }).closest("form"))
+      .toHaveAttribute("novalidate");
+  });
+
+  it("associates, focuses, and clears a malformed URL error", async () => {
+    const user = userEvent.setup();
+    const { props } = renderModal();
+    const jobUrlInput = screen.getByLabelText("Job URL");
+
+    await user.clear(jobUrlInput);
+    await user.type(jobUrlInput, "not a URL");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(screen.getByText("Enter a valid URL.")).toBeVisible();
+    expect(jobUrlInput).toHaveFocus();
+    expect(jobUrlInput).toHaveAttribute("aria-invalid", "true");
+    expect(jobUrlInput).toHaveAttribute(
+      "aria-describedby",
+      "application-job-url-error",
+    );
+    expect(props.onSave).not.toHaveBeenCalled();
+
+    await user.clear(jobUrlInput);
+    await user.type(jobUrlInput, "https://example.com/jobs/1");
+
+    expect(jobUrlInput).not.toHaveAttribute("aria-invalid");
+    expect(jobUrlInput).not.toHaveAttribute("aria-describedby");
+    expect(screen.queryByText("Enter a valid URL.")).not.toBeInTheDocument();
+  });
+
   it("focuses the first custom-invalid field and associates required errors", async () => {
     const user = userEvent.setup();
     const { props } = renderModal();

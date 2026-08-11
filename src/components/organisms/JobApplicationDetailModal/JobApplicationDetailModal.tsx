@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent, InvalidEvent } from "react";
+import type { FormEvent } from "react";
+import { JobApplicationFormFields } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
+import type { JobApplicationFormControl } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
+import {
+  issuesToFieldErrors,
+  jobApplicationFormSchema,
+  jobApplicationToFormValues,
+} from "../../molecules/JobApplicationFormFields/jobApplicationFormSchema";
+import type {
+  JobApplicationFormErrors,
+  JobApplicationFormField,
+  JobApplicationFormValues,
+} from "../../molecules/JobApplicationFormFields/jobApplicationFormSchema";
 import type { UpdateJobApplicationInput } from "../../../hooks/useJobApplications";
-import type { JobApplication, JobApplicationStatus } from "../../../types/database";
+import type { JobApplication } from "../../../types/database";
 
 type JobApplicationDetailModalProps = {
   application: JobApplication;
@@ -14,22 +26,15 @@ type JobApplicationDetailModalProps = {
   onSave: (input: UpdateJobApplicationInput) => Promise<unknown>;
 };
 
-const statusOptions: ReadonlyArray<JobApplicationStatus> = [
-  "saved",
-  "applied",
-  "interview",
-  "offer",
-  "rejected",
+const fieldOrder: JobApplicationFormField[] = [
+  "company",
+  "position",
+  "job_url",
+  "status",
+  "applied_date",
+  "notes",
+  "resume_version",
 ];
-
-function nullableTrimmedValue(value: string) {
-  const trimmedValue = value.trim();
-  return trimmedValue === "" ? null : trimmedValue;
-}
-
-function nullableNotesValue(value: string) {
-  return value.trim() === "" ? null : value;
-}
 
 export function JobApplicationDetailModal({
   application,
@@ -42,24 +47,17 @@ export function JobApplicationDetailModal({
   onSave,
 }: JobApplicationDetailModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const companyInputRef = useRef<HTMLInputElement>(null);
-  const positionInputRef = useRef<HTMLInputElement>(null);
+  const fieldRefs = useRef<
+    Partial<Record<JobApplicationFormField, JobApplicationFormControl>>
+  >({});
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const confirmDeleteButtonRef = useRef<HTMLButtonElement>(null);
   const hasOpenedDeleteConfirmationRef = useRef(false);
-  const [company, setCompany] = useState(application.company);
-  const [position, setPosition] = useState(application.position);
-  const [jobUrl, setJobUrl] = useState(application.job_url ?? "");
-  const [status, setStatus] = useState<JobApplicationStatus>(application.status);
-  const [appliedDate, setAppliedDate] = useState(application.applied_date ?? "");
-  const [notes, setNotes] = useState(application.notes ?? "");
-  const [resumeVersion, setResumeVersion] = useState(
-    application.resume_version ?? "",
+  const [values, setValues] = useState<JobApplicationFormValues>(() =>
+    jobApplicationToFormValues(application),
   );
-  const [fieldErrors, setFieldErrors] = useState<{
-    company?: string;
-    position?: string;
-  }>({});
+  const [fieldErrors, setFieldErrors] =
+    useState<JobApplicationFormErrors>({});
   const [isDeleteConfirmationVisible, setIsDeleteConfirmationVisible] =
     useState(false);
   const isBusy = isSaving || isDeleting;
@@ -84,57 +82,31 @@ export function JobApplicationDetailModal({
     dialogRef.current?.close();
   }
 
-  function handleInvalid(event: InvalidEvent<HTMLInputElement>) {
-    if (event.currentTarget.name === "company") {
-      setFieldErrors((currentErrors) => ({
-        ...currentErrors,
-        company: "Company is required.",
-      }));
-    }
-
-    if (event.currentTarget.name === "position") {
-      setFieldErrors((currentErrors) => ({
-        ...currentErrors,
-        position: "Position is required.",
-      }));
-    }
+  function handleFieldChange(field: JobApplicationFormField, value: string) {
+    setValues(
+      (currentValues) =>
+        ({ ...currentValues, [field]: value }) as JobApplicationFormValues,
+    );
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      [field]: undefined,
+    }));
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const trimmedCompany = company.trim();
-    const trimmedPosition = position.trim();
-    const requiredFieldErrors = {
-      company:
-        trimmedCompany === "" ? "Company is required." : undefined,
-      position:
-        trimmedPosition === "" ? "Position is required." : undefined,
-    };
-
-    if (requiredFieldErrors.company || requiredFieldErrors.position) {
-      setFieldErrors(requiredFieldErrors);
-      if (requiredFieldErrors.company) {
-        companyInputRef.current?.focus();
-      } else {
-        positionInputRef.current?.focus();
-      }
+    const result = jobApplicationFormSchema.safeParse(values);
+    if (!result.success) {
+      const errors = issuesToFieldErrors(result.error.issues);
+      setFieldErrors(errors);
+      const firstInvalidField = fieldOrder.find((field) => errors[field]);
+      if (firstInvalidField) fieldRefs.current[firstInvalidField]?.focus();
       return;
     }
 
-    if (!event.currentTarget.checkValidity()) return;
-
     try {
-      await onSave({
-        id: application.id,
-        company: trimmedCompany,
-        position: trimmedPosition,
-        job_url: nullableTrimmedValue(jobUrl),
-        status,
-        applied_date: nullableTrimmedValue(appliedDate),
-        notes: nullableNotesValue(notes),
-        resume_version: nullableTrimmedValue(resumeVersion),
-      });
+      await onSave({ id: application.id, ...result.data });
       closeDialog();
     } catch {
       // The parent rerenders the error state after its mutation rejects.
@@ -183,129 +155,16 @@ export function JobApplicationDetailModal({
           <span aria-hidden="true">×</span>
         </button>
       </div>
-      <form className="space-y-4 px-6 py-5" onSubmit={handleSave}>
-        <label className="block text-sm font-medium" htmlFor="application-company">
-          Company
-        </label>
-        <input
-          ref={companyInputRef}
-          autoFocus
-          aria-describedby={
-            fieldErrors.company ? "application-company-error" : undefined
-          }
-          aria-invalid={fieldErrors.company ? true : undefined}
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
+      <form className="space-y-4 px-6 py-5" noValidate onSubmit={handleSave}>
+        <JobApplicationFormFields
           disabled={isBusy}
-          id="application-company"
-          name="company"
-          required
-          value={company}
-          onChange={(event) => {
-            setCompany(event.target.value);
-            setFieldErrors((currentErrors) => ({
-              ...currentErrors,
-              company: undefined,
-            }));
+          errors={fieldErrors}
+          idPrefix="application"
+          values={values}
+          onChange={handleFieldChange}
+          setFieldRef={(field, element) => {
+            if (element) fieldRefs.current[field] = element;
           }}
-          onInvalid={handleInvalid}
-        />
-        {fieldErrors.company ? (
-          <p id="application-company-error" role="alert">
-            {fieldErrors.company}
-          </p>
-        ) : null}
-        <label className="block text-sm font-medium" htmlFor="application-position">
-          Position
-        </label>
-        <input
-          ref={positionInputRef}
-          aria-describedby={
-            fieldErrors.position ? "application-position-error" : undefined
-          }
-          aria-invalid={fieldErrors.position ? true : undefined}
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-          disabled={isBusy}
-          id="application-position"
-          name="position"
-          required
-          value={position}
-          onChange={(event) => {
-            setPosition(event.target.value);
-            setFieldErrors((currentErrors) => ({
-              ...currentErrors,
-              position: undefined,
-            }));
-          }}
-          onInvalid={handleInvalid}
-        />
-        {fieldErrors.position ? (
-          <p id="application-position-error" role="alert">
-            {fieldErrors.position}
-          </p>
-        ) : null}
-        <label className="block text-sm font-medium" htmlFor="application-job-url">
-          Job URL
-        </label>
-        <input
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-          disabled={isBusy}
-          id="application-job-url"
-          type="url"
-          value={jobUrl}
-          onChange={(event) => setJobUrl(event.target.value)}
-        />
-        <label className="block text-sm font-medium" htmlFor="application-status">
-          Status
-        </label>
-        <select
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-          disabled={isBusy}
-          id="application-status"
-          value={status}
-          onChange={(event) => setStatus(event.target.value as JobApplicationStatus)}
-        >
-          {statusOptions.map((statusOption) => (
-            <option key={statusOption} value={statusOption}>
-              {statusOption}
-            </option>
-          ))}
-        </select>
-        <label
-          className="block text-sm font-medium"
-          htmlFor="application-applied-date"
-        >
-          Applied date
-        </label>
-        <input
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-          disabled={isBusy}
-          id="application-applied-date"
-          type="date"
-          value={appliedDate}
-          onChange={(event) => setAppliedDate(event.target.value)}
-        />
-        <label className="block text-sm font-medium" htmlFor="application-notes">
-          Notes
-        </label>
-        <textarea
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-          disabled={isBusy}
-          id="application-notes"
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-        />
-        <label
-          className="block text-sm font-medium"
-          htmlFor="application-resume-version"
-        >
-          Resume version
-        </label>
-        <input
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-          disabled={isBusy}
-          id="application-resume-version"
-          value={resumeVersion}
-          onChange={(event) => setResumeVersion(event.target.value)}
         />
         {hasSaveError ? (
           <p role="alert">The application could not be saved. Please try again.</p>
