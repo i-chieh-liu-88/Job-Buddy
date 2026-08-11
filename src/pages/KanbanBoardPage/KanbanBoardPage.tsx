@@ -1,8 +1,11 @@
 import { UserButton } from "@clerk/clerk-react";
 import { useEffect, useRef, useState } from "react";
+import { AddJobApplicationModal } from "../../components/organisms/AddJobApplicationModal/AddJobApplicationModal";
+import type { JobApplicationFormData } from "../../components/molecules/JobApplicationFormFields/jobApplicationFormSchema";
 import { JobApplicationDetailModal } from "../../components/organisms/JobApplicationDetailModal/JobApplicationDetailModal";
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
+  useCreateJobApplication,
   useDeleteJobApplication,
   useJobApplications,
   useReorderJobApplications,
@@ -37,8 +40,11 @@ function findApplicationOpener(applicationId: string) {
 }
 
 export function KanbanBoardPage() {
+  const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplication | null>(null);
+  const addApplicationButtonRef = useRef<HTMLButtonElement>(null);
+  const pendingAddFocusRestorationRef = useRef(false);
   const selectedApplicationOpenerRef = useRef<HTMLButtonElement | null>(null);
   const pendingFocusRestorationRef = useRef<{
     applicationId: string;
@@ -46,10 +52,22 @@ export function KanbanBoardPage() {
   } | null>(null);
   const applicationsHeadingRef = useRef<HTMLHeadingElement>(null);
   const applicationsQuery = useJobApplications();
+  const createApplication = useCreateJobApplication();
   const reorderApplications = useReorderJobApplications();
   const updateApplication = useUpdateJobApplication();
   const deleteApplication = useDeleteJobApplication();
   const isDetailOpen = selectedApplication !== null;
+
+  useEffect(() => {
+    if (isAddOpen || !pendingAddFocusRestorationRef.current) return;
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      addApplicationButtonRef.current?.focus();
+      pendingAddFocusRestorationRef.current = false;
+    });
+
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, [isAddOpen]);
 
   useEffect(() => {
     if (isDetailOpen || !pendingFocusRestorationRef.current) return;
@@ -75,6 +93,29 @@ export function KanbanBoardPage() {
 
   function handleReorder(result: ReorderResult) {
     reorderApplications.mutate(result);
+  }
+
+  function handleOpenAddApplication() {
+    createApplication.reset();
+    pendingAddFocusRestorationRef.current = false;
+    setIsAddOpen(true);
+  }
+
+  function handleCloseAddApplication() {
+    createApplication.reset();
+    pendingAddFocusRestorationRef.current = true;
+    setIsAddOpen(false);
+  }
+
+  async function handleCreateApplication(input: JobApplicationFormData) {
+    const destinationOrderIndexes = (applicationsQuery.data ?? [])
+      .filter((application) => application.status === input.status)
+      .map((application) => application.order_index);
+
+    return createApplication.mutateAsync({
+      ...input,
+      order_index: Math.max(0, ...destinationOrderIndexes) + 1_000,
+    });
   }
 
   function handleSelectApplication(
@@ -137,7 +178,18 @@ export function KanbanBoardPage() {
               Track every opportunity from saved to final decision.
             </p>
           </div>
-          <UserButton />
+          <div className="flex items-center gap-3">
+            <button
+              ref={addApplicationButtonRef}
+              type="button"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={createApplication.isPending}
+              onClick={handleOpenAddApplication}
+            >
+              + Add Application
+            </button>
+            <UserButton />
+          </div>
         </header>
 
         {applicationsQuery.isPending ? (
@@ -168,6 +220,15 @@ export function KanbanBoardPage() {
           <p role="alert" className="mt-4 text-sm text-red-700">
             The card could not be moved. Please try again.
           </p>
+        ) : null}
+
+        {isAddOpen ? (
+          <AddJobApplicationModal
+            hasCreateError={createApplication.isError}
+            isCreating={createApplication.isPending}
+            onClose={handleCloseAddApplication}
+            onCreate={handleCreateApplication}
+          />
         ) : null}
 
         {selectedApplication ? (

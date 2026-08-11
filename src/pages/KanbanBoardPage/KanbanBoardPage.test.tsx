@@ -5,18 +5,24 @@ import type { JobApplication } from "../../types/database";
 import { KanbanBoardPage } from "./KanbanBoardPage";
 
 const {
+  createMutateAsync,
+  createReset,
   deleteMutateAsync,
   deleteReset,
   updateMutateAsync,
   updateReset,
+  useCreateJobApplicationMock,
   useDeleteJobApplicationMock,
   useJobApplicationsMock,
   useUpdateJobApplicationMock,
 } = vi.hoisted(() => ({
+  createMutateAsync: vi.fn(),
+  createReset: vi.fn(),
   deleteMutateAsync: vi.fn(),
   deleteReset: vi.fn(),
   updateMutateAsync: vi.fn(),
   updateReset: vi.fn(),
+  useCreateJobApplicationMock: vi.fn(),
   useDeleteJobApplicationMock: vi.fn(),
   useJobApplicationsMock: vi.fn(),
   useUpdateJobApplicationMock: vi.fn(),
@@ -67,6 +73,7 @@ vi.mock("@clerk/clerk-react", () => ({
 }));
 
 vi.mock("../../hooks/useJobApplications", () => ({
+  useCreateJobApplication: useCreateJobApplicationMock,
   useDeleteJobApplication: useDeleteJobApplicationMock,
   useJobApplications: useJobApplicationsMock,
   useReorderJobApplications: () => ({
@@ -79,6 +86,9 @@ vi.mock("../../hooks/useJobApplications", () => ({
 
 describe("KanbanBoardPage", () => {
   beforeEach(() => {
+    createMutateAsync.mockReset();
+    createMutateAsync.mockResolvedValue(undefined);
+    createReset.mockReset();
     deleteMutateAsync.mockReset();
     deleteMutateAsync.mockResolvedValue(undefined);
     deleteReset.mockReset();
@@ -92,6 +102,12 @@ describe("KanbanBoardPage", () => {
       isError: false,
       isPending: false,
     });
+    useCreateJobApplicationMock.mockReturnValue({
+      isError: false,
+      isPending: false,
+      mutateAsync: createMutateAsync,
+      reset: createReset,
+    });
     useUpdateJobApplicationMock.mockReturnValue({
       isError: false,
       isPending: false,
@@ -104,6 +120,107 @@ describe("KanbanBoardPage", () => {
       mutateAsync: deleteMutateAsync,
       reset: deleteReset,
     });
+  });
+
+  it("opens a fresh Add application dialog from the header", async () => {
+    const user = userEvent.setup();
+    render(<KanbanBoardPage />);
+
+    await user.click(
+      screen.getByRole("button", { name: "+ Add Application" }),
+    );
+
+    expect(screen.getByRole("dialog", { name: "Add application" })).toBeVisible();
+    expect(screen.getByLabelText("Company")).toHaveFocus();
+    expect(createReset).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Account menu" })).toBeVisible();
+  });
+
+  it("appends a new application after cards in the selected status", async () => {
+    const user = userEvent.setup();
+    render(<KanbanBoardPage />);
+    const addButton = screen.getByRole("button", { name: "+ Add Application" });
+
+    await user.click(addButton);
+    await user.type(screen.getByLabelText("Company"), "  New Acme  ");
+    await user.type(screen.getByLabelText("Position"), "  Staff Engineer  ");
+    await user.click(screen.getByRole("button", { name: "Add application" }));
+
+    await waitFor(() => {
+      expect(createMutateAsync).toHaveBeenCalledWith({
+        company: "New Acme",
+        position: "Staff Engineer",
+        job_url: null,
+        status: "saved",
+        applied_date: null,
+        notes: null,
+        resume_version: null,
+        order_index: 2_000,
+      });
+    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(addButton).toHaveFocus());
+  });
+
+  it("starts ordering at 1000 when the selected status is empty", async () => {
+    const user = userEvent.setup();
+    render(<KanbanBoardPage />);
+
+    await user.click(
+      screen.getByRole("button", { name: "+ Add Application" }),
+    );
+    await user.type(screen.getByLabelText("Company"), "Acme");
+    await user.type(screen.getByLabelText("Position"), "Engineer");
+    await user.selectOptions(screen.getByLabelText("Status"), "offer");
+    await user.click(screen.getByRole("button", { name: "Add application" }));
+
+    await waitFor(() => expect(createMutateAsync).toHaveBeenCalledOnce());
+    expect(createMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "offer", order_index: 1_000 }),
+    );
+  });
+
+  it("cancels creation without a mutation and restores Add focus", async () => {
+    const user = userEvent.setup();
+    render(<KanbanBoardPage />);
+    const addButton = screen.getByRole("button", { name: "+ Add Application" });
+
+    await user.click(addButton);
+    await user.type(screen.getByLabelText("Company"), "Unsaved");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(createMutateAsync).not.toHaveBeenCalled();
+    expect(createReset).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(addButton).toHaveFocus());
+  });
+
+  it("keeps the Add draft visible after a rejected create", async () => {
+    const user = userEvent.setup();
+    createMutateAsync.mockRejectedValue(new Error("create failed"));
+    const { rerender } = render(<KanbanBoardPage />);
+
+    await user.click(
+      screen.getByRole("button", { name: "+ Add Application" }),
+    );
+    await user.type(screen.getByLabelText("Company"), "Acme draft");
+    await user.type(screen.getByLabelText("Position"), "Engineer");
+    await user.click(screen.getByRole("button", { name: "Add application" }));
+    await waitFor(() => expect(createMutateAsync).toHaveBeenCalledOnce());
+
+    useCreateJobApplicationMock.mockReturnValue({
+      isError: true,
+      isPending: false,
+      mutateAsync: createMutateAsync,
+      reset: createReset,
+    });
+    rerender(<KanbanBoardPage />);
+
+    expect(
+      screen.getByText("The application could not be created. Please try again."),
+    ).toBeVisible();
+    expect(screen.getByLabelText("Company")).toHaveValue("Acme draft");
+    expect(screen.getByRole("dialog")).toHaveAttribute("open");
   });
 
   it("appends a moved application after destination cards before saving", async () => {
