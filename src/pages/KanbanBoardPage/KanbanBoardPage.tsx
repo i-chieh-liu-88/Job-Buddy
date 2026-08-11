@@ -1,27 +1,16 @@
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
   useJobApplications,
-  useUpdateJobApplication,
+  useReorderJobApplications,
 } from "../../hooks/useJobApplications";
-import type {
-  JobApplication,
-  JobApplicationStatus,
-} from "../../types/database";
+import type { ReorderResult } from "../../components/organisms/KanbanBoard/reorderApplications";
 
 export function KanbanBoardPage() {
   const applicationsQuery = useJobApplications();
-  const updateApplication = useUpdateJobApplication();
+  const reorderApplications = useReorderJobApplications();
 
-  async function handleMove(
-    application: JobApplication,
-    status: JobApplicationStatus,
-    orderIndex: number,
-  ) {
-    await updateApplication.mutateAsync({
-      id: application.id,
-      status,
-      order_index: orderIndex,
-    });
+  function handleReorder(result: ReorderResult) {
+    reorderApplications.mutate(result);
   }
 
   return (
@@ -51,13 +40,13 @@ export function KanbanBoardPage() {
           <div className="overflow-x-auto pb-4">
             <KanbanBoard
               applications={applicationsQuery.data ?? []}
-              isUpdating={updateApplication.isPending}
-              onMove={handleMove}
+              isUpdating={reorderApplications.isPending}
+              onReorder={handleReorder}
             />
           </div>
         )}
 
-        {updateApplication.isError ? (
+        {reorderApplications.isError ? (
           <p role="alert" className="mt-4 text-sm text-red-700">
             The card could not be moved. Please try again.
           </p>

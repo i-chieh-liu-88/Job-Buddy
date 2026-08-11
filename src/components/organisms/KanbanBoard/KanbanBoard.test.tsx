@@ -36,7 +36,7 @@ const applications: JobApplication[] = [
 
 describe("KanbanBoard", () => {
   it("renders every stage and groups cards by status", () => {
-    render(<KanbanBoard applications={applications} onMove={vi.fn()} />);
+    render(<KanbanBoard applications={applications} onReorder={vi.fn()} />);
 
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(5);
 
@@ -51,5 +51,8 @@ describe("KanbanBoard", () => {
     expect(interviewColumn).not.toBeNull();
     expect(within(savedColumn!).getByText("Frontend Engineer")).toBeVisible();
     expect(within(interviewColumn!).getByText("Product Engineer")).toBeVisible();
+    expect(screen.getByRole("region", { name: "Offer" })).toHaveTextContent(
+      "Drop a card here",
+    );
   });
 });

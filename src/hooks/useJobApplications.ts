@@ -2,11 +2,13 @@ import { useAuth } from "@clerk/clerk-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSupabaseClient } from "../lib/supabase";
 import type {
+  JobApplication,
   JobApplicationInsert,
   JobApplicationUpdate,
 } from "../types/database";
+import type { ReorderUpdate } from "../components/organisms/KanbanBoard/reorderApplications";
 
-const jobApplicationKeys = {
+export const jobApplicationKeys = {
   all: ["job-applications"] as const,
   list: (userId: string) => [...jobApplicationKeys.all, userId] as const,
 };
@@ -18,6 +20,11 @@ export type CreateJobApplicationInput = Omit<
 
 export type UpdateJobApplicationInput = JobApplicationUpdate & {
   id: string;
+};
+
+export type ReorderJobApplicationsInput = {
+  applications: JobApplication[];
+  updates: ReorderUpdate[];
 };
 
 export function useJobApplications() {
@@ -90,6 +97,51 @@ export function useUpdateJobApplication() {
       await queryClient.invalidateQueries({
         queryKey: jobApplicationKeys.list(userId ?? "signed-out"),
       });
+    },
+  });
+}
+
+export function useReorderJobApplications() {
+  const { userId } = useAuth();
+  const supabase = useSupabaseClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: ReorderJobApplicationsInput) => {
+      if (!userId) throw new Error("You must be signed in to reorder cards.");
+
+      const { data, error } = await supabase.rpc("reorder_job_applications", {
+        p_updates: input.updates,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onMutate: async (input) => {
+      if (!userId) throw new Error("You must be signed in to reorder cards.");
+
+      const queryKey = jobApplicationKeys.list(userId);
+      await queryClient.cancelQueries({ queryKey });
+      const previousApplications =
+        queryClient.getQueryData<JobApplication[]>(queryKey);
+
+      queryClient.setQueryData(queryKey, input.applications);
+
+      return { previousApplications, queryKey };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previousApplications) {
+        queryClient.setQueryData(
+          context.queryKey,
+          context.previousApplications,
+        );
+      }
+    },
+    onSettled: async (_data, _error, _input, context) => {
+      const queryKey = context?.queryKey ??
+        jobApplicationKeys.list(userId ?? "signed-out");
+
+      await queryClient.invalidateQueries({ queryKey });
     },
   });
 }
