@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -21,6 +27,19 @@ function renderModal(overrides: Partial<ModalProps> = {}) {
 }
 
 describe("AddJobApplicationModal", () => {
+  it("groups the cancel and primary submission actions", () => {
+    renderModal();
+
+    const actions = screen.getByRole("group", {
+      name: "Add application actions",
+    });
+
+    expect(within(actions).getByRole("button", { name: "Cancel" })).toBeVisible();
+    expect(
+      within(actions).getByRole("button", { name: "Add application" }),
+    ).toBeVisible();
+  });
+
   it("focuses Company after native showModal moves focus", () => {
     const showModal = vi
       .spyOn(HTMLDialogElement.prototype, "showModal")

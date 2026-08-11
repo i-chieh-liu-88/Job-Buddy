@@ -36,6 +36,9 @@ const fieldOrder: JobApplicationFormField[] = [
   "resume_version",
 ];
 
+const buttonClassName =
+  "inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
+
 export function JobApplicationDetailModal({
   application,
   hasDeleteError,
@@ -128,21 +131,24 @@ export function JobApplicationDetailModal({
       ref={dialogRef}
       aria-describedby="application-detail-description"
       aria-labelledby="application-detail-title"
-      className="w-full max-w-xl rounded-xl border border-slate-200 bg-white p-0 text-slate-950 shadow-xl"
+      className="m-auto max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-2xl overflow-hidden rounded-xl border border-line bg-canvas p-0 text-ink shadow-[0_24px_64px_rgba(30,31,33,0.18)] backdrop:bg-ink/30 backdrop:backdrop-blur-[1px] open:flex open:flex-col"
       onCancel={(event) => {
         event.preventDefault();
         if (!isBusy) closeDialog();
       }}
       onClose={onClose}
     >
-      <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+      <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4 md:px-6 md:py-5">
         <div>
-          <h2 id="application-detail-title" className="text-xl font-semibold">
+          <h2
+            id="application-detail-title"
+            className="text-xl font-semibold tracking-[-0.01em] text-ink"
+          >
             Edit {application.position}
           </h2>
           <p
             id="application-detail-description"
-            className="mt-1 text-sm text-slate-600"
+            className="mt-1 text-sm text-muted"
           >
             Update the details for this job application.
           </p>
@@ -150,35 +156,59 @@ export function JobApplicationDetailModal({
         <button
           type="button"
           aria-label="Close dialog"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-md text-xl leading-none text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
           disabled={isBusy}
           onClick={closeDialog}
         >
           <span aria-hidden="true">×</span>
         </button>
-      </div>
-      <form className="space-y-4 px-6 py-5" noValidate onSubmit={handleSave}>
-        <JobApplicationFormFields
-          disabled={isBusy}
-          errors={fieldErrors}
-          idPrefix="application"
-          values={values}
-          onChange={handleFieldChange}
-          setFieldRef={(field, element) => {
-            if (element) fieldRefs.current[field] = element;
-          }}
-        />
-        {hasSaveError ? (
-          <p role="alert">The application could not be saved. Please try again.</p>
-        ) : null}
-        {hasDeleteError ? (
-          <p role="alert">The application could not be deleted. Please try again.</p>
-        ) : null}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5">
+      </header>
+      <form
+        className="flex min-h-0 flex-1 flex-col"
+        noValidate
+        onSubmit={handleSave}
+      >
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 md:px-6">
+          <JobApplicationFormFields
+            disabled={isBusy}
+            errors={fieldErrors}
+            idPrefix="application"
+            values={values}
+            onChange={handleFieldChange}
+            setFieldRef={(field, element) => {
+              if (element) fieldRefs.current[field] = element;
+            }}
+          />
+          {hasSaveError ? (
+            <p className="mt-4 text-sm text-danger" role="alert">
+              The application could not be saved. Please try again.
+            </p>
+          ) : null}
+          {hasDeleteError ? (
+            <p className="mt-4 text-sm text-danger" role="alert">
+              The application could not be deleted. Please try again.
+            </p>
+          ) : null}
+        </div>
+        <div
+          className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-line bg-canvas px-5 py-4 md:px-6"
+          role={isDeleteConfirmationVisible ? undefined : "group"}
+          aria-label={
+            isDeleteConfirmationVisible ? undefined : "Application actions"
+          }
+        >
           {isDeleteConfirmationVisible ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <p role="alert">Delete {application.company}?</p>
+            <div
+              className="flex flex-1 flex-wrap items-center gap-2 rounded-lg border border-danger/20 bg-danger/5 p-2.5"
+              role="group"
+              aria-label="Delete confirmation"
+            >
+              <p className="mr-auto text-sm font-medium text-danger" role="alert">
+                Delete {application.company}?
+              </p>
               <button
                 type="button"
+                className={`${buttonClassName} border border-line bg-canvas text-ink hover:bg-hover`}
                 disabled={isBusy}
                 onClick={() => setIsDeleteConfirmationVisible(false)}
               >
@@ -187,6 +217,7 @@ export function JobApplicationDetailModal({
               <button
                 ref={confirmDeleteButtonRef}
                 type="button"
+                className={`${buttonClassName} bg-danger text-white hover:bg-danger/90`}
                 disabled={isBusy}
                 onClick={handleDelete}
               >
@@ -197,17 +228,27 @@ export function JobApplicationDetailModal({
             <button
               ref={deleteButtonRef}
               type="button"
+              className={`${buttonClassName} border border-danger/40 bg-canvas text-danger hover:bg-danger/5`}
               disabled={isBusy}
               onClick={() => setIsDeleteConfirmationVisible(true)}
             >
               Delete
             </button>
           )}
-          <div className="flex gap-2">
-            <button type="button" disabled={isBusy} onClick={closeDialog}>
+          <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              className={`${buttonClassName} border border-line bg-canvas text-ink hover:bg-hover`}
+              disabled={isBusy}
+              onClick={closeDialog}
+            >
               Cancel
             </button>
-            <button type="submit" disabled={isBusy}>
+            <button
+              type="submit"
+              className={`${buttonClassName} bg-primary text-ink hover:bg-primary-hover`}
+              disabled={isBusy}
+            >
               Save changes
             </button>
           </div>

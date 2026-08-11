@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -45,6 +51,18 @@ function renderModal(overrides: Partial<ModalProps> = {}) {
 }
 
 describe("JobApplicationDetailModal", () => {
+  it("groups destructive, neutral, and primary application actions", () => {
+    renderModal();
+
+    const actions = screen.getByRole("group", {
+      name: "Application actions",
+    });
+
+    for (const name of ["Delete", "Cancel", "Save changes"]) {
+      expect(within(actions).getByRole("button", { name })).toBeVisible();
+    }
+  });
+
   it("focuses Company after native showModal moves focus", () => {
     const showModal = vi
       .spyOn(HTMLDialogElement.prototype, "showModal")
@@ -290,7 +308,15 @@ describe("JobApplicationDetailModal", () => {
     const deleteButton = screen.getByRole("button", { name: "Delete" });
     await user.click(deleteButton);
 
-    expect(screen.getByRole("button", { name: "Confirm delete" })).toHaveFocus();
+    const confirmation = screen.getByRole("group", {
+      name: "Delete confirmation",
+    });
+    expect(
+      within(confirmation).getByRole("button", { name: "Cancel delete" }),
+    ).toBeVisible();
+    expect(
+      within(confirmation).getByRole("button", { name: "Confirm delete" }),
+    ).toHaveFocus();
     expect(screen.getByRole("alert")).toHaveTextContent("Delete Acme?");
 
     await user.click(screen.getByRole("button", { name: "Cancel delete" }));
