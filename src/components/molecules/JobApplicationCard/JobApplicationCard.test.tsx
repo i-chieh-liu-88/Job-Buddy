@@ -67,8 +67,36 @@ describe("JobApplicationCard", () => {
     await user.click(openButton);
 
     expect(onSelect).toHaveBeenCalledWith(application);
+    expect(sortableListeners.onPointerDown).not.toHaveBeenCalled();
     expect(dragButton).toHaveAttribute("data-sortable-attributes", "present");
+    expect(dragButton).toHaveClass("touch-none");
     expect(openButton).not.toHaveAttribute("data-sortable-attributes");
     expect(setActivatorNodeRef).toHaveBeenCalledWith(dragButton);
+  });
+
+  it("disables both card controls when dragging is disabled", async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <JobApplicationCard
+        application={application}
+        isDisabled
+        onSelect={onSelect}
+      />,
+    );
+
+    const openButton = screen.getByRole("button", {
+      name: "Open Frontend Engineer at Acme",
+    });
+    const dragButton = screen.getByRole("button", {
+      name: "Drag Frontend Engineer at Acme",
+    });
+
+    await user.click(openButton);
+
+    expect(openButton).toBeDisabled();
+    expect(dragButton).toBeDisabled();
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });

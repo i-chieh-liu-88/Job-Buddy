@@ -87,7 +87,7 @@ export function JobApplicationCard({
       <button
         ref={setActivatorNodeRef}
         type="button"
-        className="self-stretch border-l border-slate-200 px-3 text-slate-500 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+        className="touch-none self-stretch border-l border-slate-200 px-3 text-slate-500 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
         aria-label={`Drag ${application.position} at ${application.company}`}
         disabled={isDisabled}
         {...attributes}
