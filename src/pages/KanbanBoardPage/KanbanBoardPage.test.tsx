@@ -140,17 +140,21 @@ describe("KanbanBoardPage", () => {
     ).toHaveTextContent("1");
   });
 
-  it("restores Add focus to the sidebar button that opened the dialog", async () => {
+  it("restores Add focus to each exact navigation opener", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
-    const addButton = screen.getByRole("button", {
+    const addButtons = screen.getAllByRole("button", {
       name: "Add application",
     });
 
-    await user.click(addButton);
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(addButtons).toHaveLength(2);
 
-    await waitFor(() => expect(addButton).toHaveFocus());
+    for (const addButton of addButtons) {
+      await user.click(addButton);
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+      await waitFor(() => expect(addButton).toHaveFocus());
+    }
   });
 
   it("opens a fresh Add application dialog from the sidebar", async () => {
@@ -158,7 +162,7 @@ describe("KanbanBoardPage", () => {
     render(<KanbanBoardPage />);
 
     await user.click(
-      screen.getByRole("button", { name: "Add application" }),
+      screen.getAllByRole("button", { name: "Add application" })[0],
     );
 
     expect(screen.getByRole("dialog", { name: "Add application" })).toBeVisible();
@@ -170,7 +174,9 @@ describe("KanbanBoardPage", () => {
   it("appends a new application after cards in the selected status", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
-    const addButton = screen.getByRole("button", { name: "Add application" });
+    const addButton = screen.getAllByRole("button", {
+      name: "Add application",
+    })[0];
 
     await user.click(addButton);
     await user.type(screen.getByLabelText("Company"), "  New Acme  ");
@@ -202,7 +208,7 @@ describe("KanbanBoardPage", () => {
     render(<KanbanBoardPage />);
 
     await user.click(
-      screen.getByRole("button", { name: "Add application" }),
+      screen.getAllByRole("button", { name: "Add application" })[0],
     );
     await user.type(screen.getByLabelText("Company"), "Acme");
     await user.type(screen.getByLabelText("Position"), "Engineer");
@@ -222,7 +228,9 @@ describe("KanbanBoardPage", () => {
   it("cancels creation without a mutation and restores Add focus", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
-    const addButton = screen.getByRole("button", { name: "Add application" });
+    const addButton = screen.getAllByRole("button", {
+      name: "Add application",
+    })[0];
 
     await user.click(addButton);
     await user.type(screen.getByLabelText("Company"), "Unsaved");
@@ -240,7 +248,7 @@ describe("KanbanBoardPage", () => {
     const { rerender } = render(<KanbanBoardPage />);
 
     await user.click(
-      screen.getByRole("button", { name: "Add application" }),
+      screen.getAllByRole("button", { name: "Add application" })[0],
     );
     await user.type(screen.getByLabelText("Company"), "Acme draft");
     await user.type(screen.getByLabelText("Position"), "Engineer");
