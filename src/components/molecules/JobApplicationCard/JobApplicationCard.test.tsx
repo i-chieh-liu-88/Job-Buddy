@@ -39,6 +39,12 @@ const application: JobApplication = {
   updated_at: "2026-08-11T00:00:00.000Z",
 };
 
+const applicationWithMetadata: JobApplication = {
+  ...application,
+  job_url: "https://example.com/jobs/frontend-engineer",
+  applied_date: "2026-08-10",
+};
+
 describe("JobApplicationCardPreview", () => {
   it("renders drag feedback without an interactive sortable role", () => {
     render(<JobApplicationCardPreview application={application} />);
@@ -51,6 +57,27 @@ describe("JobApplicationCardPreview", () => {
 });
 
 describe("JobApplicationCard", () => {
+  it("shows applied date and a non-interactive URL indicator when available", () => {
+    render(
+      <JobApplicationCard
+        application={applicationWithMetadata}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Applied Aug 10, 2026")).toBeVisible();
+    expect(screen.getByLabelText("Job URL available")).toBeVisible();
+    expect(screen.getByLabelText("Status: Saved")).toBeVisible();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("omits the metadata row when applied date and URL are absent", () => {
+    render(<JobApplicationCard application={application} onSelect={vi.fn()} />);
+
+    expect(screen.queryByText(/^Applied /)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Job URL available")).not.toBeInTheDocument();
+  });
+
   it("selects from its content button and assigns the drag activator to its handle", async () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
