@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { JobApplication } from "../../../types/database";
 import { KanbanBoard } from "./KanbanBoard";
@@ -36,7 +37,13 @@ const applications: JobApplication[] = [
 
 describe("KanbanBoard", () => {
   it("renders every stage and groups cards by status", () => {
-    render(<KanbanBoard applications={applications} onReorder={vi.fn()} />);
+    render(
+      <KanbanBoard
+        applications={applications}
+        onReorder={vi.fn()}
+        onSelectApplication={vi.fn()}
+      />,
+    );
 
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(5);
 
@@ -53,6 +60,35 @@ describe("KanbanBoard", () => {
     expect(within(interviewColumn!).getByText("Product Engineer")).toBeVisible();
     expect(screen.getByRole("region", { name: "Offer" })).toHaveTextContent(
       "Drop a card here",
+    );
+  });
+
+  it("selects the application from its card content button", async () => {
+    const onSelectApplication = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <KanbanBoard
+        applications={applications}
+        onReorder={vi.fn()}
+        onSelectApplication={onSelectApplication}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Open Frontend Engineer at Acme" }),
+    );
+
+    expect(onSelectApplication).toHaveBeenCalledWith(applications[0]);
+  });
+
+  it("keeps the card selection control safe when no page callback is provided", async () => {
+    const user = userEvent.setup();
+
+    render(<KanbanBoard applications={applications} onReorder={vi.fn()} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Open Frontend Engineer at Acme" }),
     );
   });
 });

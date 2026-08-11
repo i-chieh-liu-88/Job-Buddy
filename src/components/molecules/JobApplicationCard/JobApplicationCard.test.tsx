@@ -1,7 +1,28 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import type { JobApplication } from "../../../types/database";
-import { JobApplicationCardPreview } from "./JobApplicationCard";
+import {
+  JobApplicationCard,
+  JobApplicationCardPreview,
+} from "./JobApplicationCard";
+
+const sortableListeners = {
+  onPointerDown: vi.fn(),
+};
+const setActivatorNodeRef = vi.fn();
+
+vi.mock("@dnd-kit/sortable", () => ({
+  useSortable: vi.fn(() => ({
+    attributes: { "data-sortable-attributes": "present" },
+    isDragging: false,
+    listeners: sortableListeners,
+    setActivatorNodeRef,
+    setNodeRef: vi.fn(),
+    transform: null,
+    transition: null,
+  })),
+}));
 
 const application: JobApplication = {
   id: "application-1",
@@ -26,5 +47,28 @@ describe("JobApplicationCardPreview", () => {
       screen.getByLabelText("Frontend Engineer at Acme"),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+});
+
+describe("JobApplicationCard", () => {
+  it("selects from its content button and assigns the drag activator to its handle", async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+
+    render(<JobApplicationCard application={application} onSelect={onSelect} />);
+
+    const openButton = screen.getByRole("button", {
+      name: "Open Frontend Engineer at Acme",
+    });
+    const dragButton = screen.getByRole("button", {
+      name: "Drag Frontend Engineer at Acme",
+    });
+
+    await user.click(openButton);
+
+    expect(onSelect).toHaveBeenCalledWith(application);
+    expect(dragButton).toHaveAttribute("data-sortable-attributes", "present");
+    expect(openButton).not.toHaveAttribute("data-sortable-attributes");
+    expect(setActivatorNodeRef).toHaveBeenCalledWith(dragButton);
   });
 });

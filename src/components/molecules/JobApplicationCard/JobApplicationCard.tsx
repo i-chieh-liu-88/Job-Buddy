@@ -6,6 +6,7 @@ import type { JobApplication } from "../../../types/database";
 type JobApplicationCardProps = {
   application: JobApplication;
   isDisabled?: boolean;
+  onSelect: (application: JobApplication) => void;
 };
 
 function JobApplicationCardContent({
@@ -45,11 +46,13 @@ export function JobApplicationCardPreview({
 export function JobApplicationCard({
   application,
   isDisabled = false,
+  onSelect,
 }: JobApplicationCardProps) {
   const {
     attributes,
     isDragging,
     listeners,
+    setActivatorNodeRef,
     setNodeRef,
     transform,
     transition,
@@ -67,14 +70,31 @@ export function JobApplicationCard({
     <article
       ref={setNodeRef}
       style={dragStyle}
-      className={`touch-none rounded-lg border border-slate-200 bg-white p-4 shadow-sm ${
+      className={`flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${
         isDragging ? "relative z-10 opacity-30" : ""
-      } cursor-grab`}
+      }`}
       aria-label={`${application.position} at ${application.company}`}
-      {...listeners}
-      {...attributes}
     >
-      <JobApplicationCardContent application={application} />
+      <button
+        type="button"
+        className="min-w-0 flex-1 p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600 disabled:cursor-not-allowed"
+        aria-label={`Open ${application.position} at ${application.company}`}
+        disabled={isDisabled}
+        onClick={() => onSelect(application)}
+      >
+        <JobApplicationCardContent application={application} />
+      </button>
+      <button
+        ref={setActivatorNodeRef}
+        type="button"
+        className="self-stretch border-l border-slate-200 px-3 text-slate-500 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label={`Drag ${application.position} at ${application.company}`}
+        disabled={isDisabled}
+        {...attributes}
+        {...listeners}
+      >
+        <span aria-hidden="true">↕</span>
+      </button>
     </article>
   );
 }

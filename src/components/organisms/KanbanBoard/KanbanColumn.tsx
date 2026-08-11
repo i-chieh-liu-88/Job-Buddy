@@ -10,6 +10,7 @@ type KanbanColumnProps = {
   applications: JobApplication[];
   isDisabled: boolean;
   label: string;
+  onSelectApplication: (application: JobApplication) => void;
   status: JobApplicationStatus;
 };
 
@@ -17,6 +18,7 @@ export function KanbanColumn({
   applications,
   isDisabled,
   label,
+  onSelectApplication,
   status,
 }: KanbanColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
@@ -61,6 +63,7 @@ export function KanbanColumn({
                 key={application.id}
                 application={application}
                 isDisabled={isDisabled}
+                onSelect={onSelectApplication}
               />
             ))
           )}

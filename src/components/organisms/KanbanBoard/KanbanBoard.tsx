@@ -33,16 +33,20 @@ const KANBAN_COLUMNS: ReadonlyArray<{
   { status: "rejected", label: "Rejected" },
 ];
 
+const noopSelectApplication = () => {};
+
 type KanbanBoardProps = {
   applications: JobApplication[];
   isUpdating?: boolean;
   onReorder: (result: ReorderResult) => void;
+  onSelectApplication?: (application: JobApplication) => void;
 };
 
 export function KanbanBoard({
   applications,
   isUpdating = false,
   onReorder,
+  onSelectApplication = noopSelectApplication,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(
@@ -89,6 +93,7 @@ export function KanbanBoard({
                 applications={columnApplications}
                 isDisabled={isUpdating}
                 label={label}
+                onSelectApplication={onSelectApplication}
                 status={status}
               />
             </div>
