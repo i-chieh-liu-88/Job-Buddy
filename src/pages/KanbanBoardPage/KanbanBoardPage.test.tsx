@@ -1,5 +1,13 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobApplication } from "../../types/database";
 import { KanbanBoardPage } from "./KanbanBoardPage";
@@ -68,9 +76,67 @@ function createDeferredMutation() {
   return { promise, resolve: resolveMutation };
 }
 
+function completeDrawerExit() {
+  fireEvent.click(screen.getByTestId("complete-drawer-exit"));
+}
+
 vi.mock("@clerk/clerk-react", () => ({
   UserButton: () => <button type="button" aria-label="Account menu" />,
 }));
+
+vi.mock("../../components/atoms/Drawer/Drawer", async () => {
+  const { useEffect } = await import("react");
+
+  function Drawer({
+    open,
+    onOpenChange,
+    onExitComplete,
+    ariaLabel,
+    children,
+    dismissable = true,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onExitComplete?: () => void;
+    ariaLabel?: string;
+    children: ReactNode;
+    dismissable?: boolean;
+  }) {
+    useEffect(() => {
+      if (!open) return;
+
+      function handleEscape(event: KeyboardEvent) {
+        if (event.key === "Escape" && dismissable) onOpenChange(false);
+      }
+
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }, [dismissable, onOpenChange, open]);
+
+    return (
+      <>
+        <div
+          data-testid="drawer-backdrop"
+          onClick={() => dismissable && onOpenChange(false)}
+        />
+        <aside role="dialog" aria-modal="true" aria-label={ariaLabel}>
+          {children}
+          {!open ? (
+            <button
+              type="button"
+              data-testid="complete-drawer-exit"
+              onClick={onExitComplete}
+            >
+              Complete drawer exit
+            </button>
+          ) : null}
+        </aside>
+      </>
+    );
+  }
+
+  return { Drawer };
+});
 
 vi.mock("../../hooks/useJobApplications", () => ({
   useCreateJobApplication: useCreateJobApplicationMock,
@@ -328,6 +394,9 @@ describe("KanbanBoardPage", () => {
       await deferredUpdate.promise;
     });
 
+    expect(screen.getByLabelText("Company")).toHaveValue("Acme");
+    expect(replacementOpener).not.toHaveFocus();
+    completeDrawerExit();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() => expect(replacementOpener).toHaveFocus());
   });
@@ -347,11 +416,38 @@ describe("KanbanBoardPage", () => {
 
     expect(updateMutateAsync).not.toHaveBeenCalled();
     expect(deleteMutateAsync).not.toHaveBeenCalled();
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Company")).toHaveValue("Acme");
+    expect(originalOpener).not.toHaveFocus();
     expect(updateReset).toHaveBeenCalledTimes(2);
     expect(deleteReset).toHaveBeenCalledTimes(2);
+    completeDrawerExit();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() => expect(originalOpener).toHaveFocus());
   });
+
+  for (const dismissal of ["Close drawer", "Escape", "backdrop"] as const) {
+    it(`restores card focus after ${dismissal} exit completes`, async () => {
+      const user = userEvent.setup();
+      render(<KanbanBoardPage />);
+      const opener = screen.getByRole("button", {
+        name: "Open Frontend Engineer at Acme",
+      });
+
+      await user.click(opener);
+      if (dismissal === "Escape") {
+        fireEvent.keyDown(document, { key: "Escape" });
+      } else if (dismissal === "backdrop") {
+        fireEvent.click(screen.getByTestId("drawer-backdrop"));
+      } else {
+        await user.click(screen.getByRole("button", { name: dismissal }));
+      }
+
+      expect(screen.getByLabelText("Company")).toHaveValue("Acme");
+      expect(opener).not.toHaveFocus();
+      completeDrawerExit();
+      await waitFor(() => expect(opener).toHaveFocus());
+    });
+  }
 
   it("preserves the order index when saving in the same status", async () => {
     const user = userEvent.setup();
@@ -407,12 +503,15 @@ describe("KanbanBoardPage", () => {
       await deferredDelete.promise;
     });
 
+    expect(screen.getByLabelText("Company")).toHaveValue("Acme");
+    expect(fallbackHeading).not.toHaveFocus();
+    completeDrawerExit();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(fallbackHeading).toHaveAttribute("tabindex", "-1");
     await waitFor(() => expect(fallbackHeading).toHaveFocus());
   });
 
-  it("keeps the dialog visible and shows a save error after a rejected update", async () => {
+  it("keeps the drawer visible and shows a save error after a rejected update", async () => {
     const user = userEvent.setup();
     updateMutateAsync.mockRejectedValue(new Error("save failed"));
     const { rerender } = render(<KanbanBoardPage />);
@@ -434,7 +533,9 @@ describe("KanbanBoardPage", () => {
     expect(
       screen.getByText("The application could not be saved. Please try again."),
     ).toBeVisible();
-    expect(screen.getByRole("dialog")).toHaveAttribute("open");
+    expect(
+      screen.getByRole("dialog", { name: "Edit Frontend Engineer" }),
+    ).toBeVisible();
   });
 
   it("provides the signed-in user with an account menu", () => {

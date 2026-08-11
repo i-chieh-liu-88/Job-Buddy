@@ -6,7 +6,7 @@ import {
   ApplicationNavigation,
   type ApplicationStageCounts,
 } from "../../components/organisms/ApplicationNavigation/ApplicationNavigation";
-import { JobApplicationDetailModal } from "../../components/organisms/JobApplicationDetailModal/JobApplicationDetailModal";
+import { JobApplicationDetailDrawer } from "../../components/organisms/JobApplicationDetailDrawer/JobApplicationDetailDrawer";
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
   useCreateJobApplication,
@@ -47,6 +47,7 @@ function findApplicationOpener(applicationId: string) {
 
 export function KanbanBoardPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplication | null>(null);
   const addApplicationOpenerRef = useRef<HTMLButtonElement | null>(null);
@@ -62,7 +63,6 @@ export function KanbanBoardPage() {
   const reorderApplications = useReorderJobApplications();
   const updateApplication = useUpdateJobApplication();
   const deleteApplication = useDeleteJobApplication();
-  const isDetailOpen = selectedApplication !== null;
   const applications = applicationsQuery.data ?? [];
   const stageCounts = JOB_APPLICATION_STATUS_ORDER.reduce<ApplicationStageCounts>(
     (counts, status) => ({
@@ -86,7 +86,7 @@ export function KanbanBoardPage() {
   }, [isAddOpen]);
 
   useEffect(() => {
-    if (isDetailOpen || !pendingFocusRestorationRef.current) return;
+    if (selectedApplication || !pendingFocusRestorationRef.current) return;
 
     const animationFrameId = window.requestAnimationFrame(() => {
       const focusRestoration = pendingFocusRestorationRef.current;
@@ -105,7 +105,7 @@ export function KanbanBoardPage() {
     });
 
     return () => window.cancelAnimationFrame(animationFrameId);
-  }, [isDetailOpen]);
+  }, [selectedApplication]);
 
   function handleReorder(result: ReorderResult) {
     reorderApplications.mutate(result);
@@ -144,9 +144,10 @@ export function KanbanBoardPage() {
     pendingFocusRestorationRef.current = null;
     selectedApplicationOpenerRef.current = opener;
     setSelectedApplication(application);
+    setIsDetailOpen(true);
   }
 
-  function handleCloseDetails() {
+  function handleRequestCloseDetails() {
     updateApplication.reset();
     deleteApplication.reset();
     if (selectedApplication && selectedApplicationOpenerRef.current) {
@@ -155,6 +156,10 @@ export function KanbanBoardPage() {
         opener: selectedApplicationOpenerRef.current,
       };
     }
+    setIsDetailOpen(false);
+  }
+
+  function handleDetailExitComplete() {
     setSelectedApplication(null);
   }
 
@@ -247,16 +252,20 @@ export function KanbanBoardPage() {
           ) : null}
 
           {selectedApplication ? (
-            <JobApplicationDetailModal
+            <JobApplicationDetailDrawer
               key={selectedApplication.id}
               application={selectedApplication}
               hasDeleteError={deleteApplication.isError}
               hasSaveError={updateApplication.isError}
               isDeleting={deleteApplication.isPending}
               isSaving={updateApplication.isPending}
-              onClose={handleCloseDetails}
               onDelete={(id) => deleteApplication.mutateAsync(id)}
+              onExitComplete={handleDetailExitComplete}
+              onOpenChange={(open) => {
+                if (!open) handleRequestCloseDetails();
+              }}
               onSave={handleSaveApplication}
+              open={isDetailOpen}
             />
           ) : null}
         </div>
