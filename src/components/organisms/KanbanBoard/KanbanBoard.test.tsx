@@ -56,6 +56,8 @@ describe("KanbanBoard", () => {
 
     expect(savedColumn).not.toBeNull();
     expect(interviewColumn).not.toBeNull();
+    expect(savedColumn?.parentElement).toHaveClass("w-full");
+    expect(savedColumn?.parentElement).toHaveClass("md:w-[19rem]");
     expect(within(savedColumn!).getByText("Frontend Engineer")).toBeVisible();
     expect(within(interviewColumn!).getByText("Product Engineer")).toBeVisible();
     expect(screen.getByRole("region", { name: "Offer (0)" })).toHaveTextContent(

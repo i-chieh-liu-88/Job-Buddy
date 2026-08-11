@@ -34,7 +34,7 @@ export function KanbanColumn({
   return (
     <section
       ref={setNodeRef}
-      className={`min-h-[22rem] rounded-xl border p-3 transition-colors motion-reduce:transition-none ${
+      className={`min-h-40 rounded-xl border p-3 transition-colors motion-reduce:transition-none md:min-h-[22rem] ${
         isOver
           ? "border-focus bg-focus/5"
           : "border-line bg-surface"

@@ -190,7 +190,7 @@ export function ApplicationNavigation({
         </aside>
       </div>
 
-      <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-canvas px-4 md:hidden">
+      <header className="fixed inset-x-0 top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-canvas px-4 md:hidden">
         <button
           ref={menuButtonRef}
           type="button"

@@ -187,7 +187,7 @@ export function KanbanBoardPage() {
         />
       }
     >
-      <div className="min-h-screen bg-canvas px-4 py-8 text-ink sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-canvas px-4 pb-6 pt-24 text-ink sm:px-6 md:py-8 lg:px-8">
         <div className="mx-auto max-w-[96rem]">
           <header className="mb-8">
           <div>
@@ -221,7 +221,7 @@ export function KanbanBoardPage() {
               ) : null}
             </div>
           ) : (
-            <div className="overflow-x-auto pb-4">
+            <div className="w-full overflow-x-visible pb-4 md:overflow-x-auto">
               <KanbanBoard
                 applications={applications}
                 isUpdating={reorderApplications.isPending}

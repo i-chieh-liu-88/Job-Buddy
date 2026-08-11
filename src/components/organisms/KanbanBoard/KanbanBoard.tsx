@@ -76,7 +76,7 @@ export function KanbanBoard({
       onDragCancel={() => setActiveId(null)}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex min-w-max gap-4">
+      <div className="flex w-full flex-col gap-4 md:min-w-max md:flex-row">
         {JOB_APPLICATION_STATUS_ORDER.map((status) => {
           const { label } = JOB_APPLICATION_STATUS_PRESENTATION[status];
           const columnApplications = applications
@@ -84,7 +84,7 @@ export function KanbanBoard({
             .sort((left, right) => left.order_index - right.order_index);
 
           return (
-            <div key={status} className="w-[19rem] shrink-0">
+            <div key={status} className="w-full md:w-[19rem] md:shrink-0">
               <KanbanColumn
                 applications={columnApplications}
                 isDisabled={isUpdating}
@@ -98,7 +98,7 @@ export function KanbanBoard({
       </div>
       <DragOverlay>
         {activeApplication ? (
-          <div className="w-[19rem]">
+          <div className="w-[min(19rem,calc(100vw-2rem))]">
             <JobApplicationCardPreview application={activeApplication} />
           </div>
         ) : null}
