@@ -19,9 +19,11 @@ const values: JobApplicationFormValues = {
 function renderFields({
   disabled = false,
   errors = {},
+  layout,
 }: {
   disabled?: boolean;
   errors?: JobApplicationFormErrors;
+  layout?: "responsive" | "single-column";
 } = {}) {
   const onChange = vi.fn();
   const setFieldRef = vi.fn();
@@ -31,6 +33,7 @@ function renderFields({
       disabled={disabled}
       errors={errors}
       idPrefix="test-application"
+      layout={layout}
       values={values}
       onChange={onChange}
       setFieldRef={setFieldRef}
@@ -41,6 +44,32 @@ function renderFields({
 }
 
 describe("JobApplicationFormFields", () => {
+  it("keeps the default responsive two-column layout", () => {
+    renderFields();
+
+    expect(
+      screen.getByRole("group", { name: "Application details" }),
+    ).toHaveClass("md:grid-cols-2");
+  });
+
+  it("renders every detail field in one column when requested", () => {
+    renderFields({ layout: "single-column" });
+    const details = screen.getByRole("group", {
+      name: "Application details",
+    });
+
+    expect(details).not.toHaveClass("md:grid-cols-2");
+    expect(screen.getByLabelText("Job URL").parentElement).not.toHaveClass(
+      "md:col-span-2",
+    );
+    expect(screen.getByLabelText("Notes").parentElement).not.toHaveClass(
+      "md:col-span-2",
+    );
+    expect(
+      screen.getByLabelText("Resume version").parentElement,
+    ).not.toHaveClass("md:col-span-2");
+  });
+
   it("groups every editable field as application details", () => {
     renderFields();
 

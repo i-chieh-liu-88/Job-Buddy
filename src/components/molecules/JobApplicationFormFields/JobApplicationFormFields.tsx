@@ -4,6 +4,7 @@ import type {
   JobApplicationFormValues,
 } from "./jobApplicationFormSchema";
 import { jobApplicationStatuses } from "./jobApplicationFormSchema";
+import { cn } from "../../../lib/cn";
 
 export type JobApplicationFormControl =
   | HTMLInputElement
@@ -14,6 +15,7 @@ type JobApplicationFormFieldsProps = {
   disabled: boolean;
   errors: JobApplicationFormErrors;
   idPrefix: string;
+  layout?: "responsive" | "single-column";
   onChange: (field: JobApplicationFormField, value: string) => void;
   setFieldRef: (
     field: JobApplicationFormField,
@@ -33,10 +35,13 @@ export function JobApplicationFormFields({
   disabled,
   errors,
   idPrefix,
+  layout = "responsive",
   onChange,
   setFieldRef,
   values,
 }: JobApplicationFormFieldsProps) {
+  const usesResponsiveColumns = layout === "responsive";
+
   function controlId(field: JobApplicationFormField) {
     return `${idPrefix}-${field.replace("_", "-")}`;
   }
@@ -72,7 +77,10 @@ export function JobApplicationFormFields({
 
   return (
     <div
-      className="grid grid-cols-1 gap-4 md:grid-cols-2"
+      className={cn(
+        "grid grid-cols-1 gap-4",
+        usesResponsiveColumns && "md:grid-cols-2",
+      )}
       role="group"
       aria-label="Application details"
     >
@@ -117,7 +125,7 @@ export function JobApplicationFormFields({
         {fieldError("position")}
       </div>
 
-      <div className="md:col-span-2">
+      <div className={cn(usesResponsiveColumns && "md:col-span-2")}>
         <label
           className="block text-sm font-medium text-ink"
           htmlFor={controlId("job_url")}
@@ -185,7 +193,7 @@ export function JobApplicationFormFields({
         {fieldError("applied_date")}
       </div>
 
-      <div className="md:col-span-2">
+      <div className={cn(usesResponsiveColumns && "md:col-span-2")}>
         <label
           className="block text-sm font-medium text-ink"
           htmlFor={controlId("notes")}
@@ -205,7 +213,7 @@ export function JobApplicationFormFields({
         {fieldError("notes")}
       </div>
 
-      <div className="md:col-span-2">
+      <div className={cn(usesResponsiveColumns && "md:col-span-2")}>
         <label
           className="block text-sm font-medium text-ink"
           htmlFor={controlId("resume_version")}
