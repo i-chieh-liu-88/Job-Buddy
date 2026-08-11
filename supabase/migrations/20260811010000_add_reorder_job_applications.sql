@@ -39,6 +39,7 @@ begin
       order_index integer
     )
     where parsed.id is null
+      or parsed.status is null
       or parsed.status not in ('saved', 'applied', 'interview', 'offer', 'rejected')
       or parsed.order_index is null
       or parsed.order_index < 0
