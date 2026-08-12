@@ -219,13 +219,17 @@ function DesktopApplicationDestinations(props: {
               isActive={destination.isActive}
               disabled={destination.disabled}
               aria-label={
-                destination.disabled
-                  ? isCollapsed
-                    ? destination.label
-                    : `${destination.label} — Soon`
-                  : undefined
+                isCollapsed
+                  ? destination.label
+                  : destination.disabled
+                    ? `${destination.label} — Soon`
+                    : undefined
               }
               title={isCollapsed ? destination.label : undefined}
+              className={cn(
+                isCollapsed &&
+                  "justify-center gap-0 px-0 [&>span.flex-1]:hidden",
+              )}
               badge={
                 destination.disabled && !isCollapsed ? (
                   <span className="text-[0.625rem] font-semibold uppercase tracking-wider">
@@ -234,7 +238,7 @@ function DesktopApplicationDestinations(props: {
                 ) : undefined
               }
             >
-              {destination.label}
+              {isCollapsed ? null : destination.label}
             </AnimatedSidebarMenuButton>
           </AnimatedSidebarMenuItem>
         ))}

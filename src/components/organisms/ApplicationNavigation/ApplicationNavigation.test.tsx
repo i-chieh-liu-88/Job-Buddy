@@ -223,6 +223,23 @@ describe("ApplicationNavigation", () => {
     }
   });
 
+  it("renders collapsed destinations as centered icon-only controls", () => {
+    renderNavigation(defaultProps, { initialOpen: false });
+    const desktopNavigation = within(
+      screen.getByRole("complementary", { name: "Application navigation" }),
+    );
+
+    for (const label of ["Applications", "Stats", "Reminders", "Export"]) {
+      const control = desktopNavigation.getByRole(
+        label === "Applications" ? "link" : "button",
+        { name: label },
+      );
+
+      expect(control).toHaveClass("justify-center");
+      expect(within(control).queryByText(label)).not.toBeInTheDocument();
+    }
+  });
+
   it.each([
     ["Saved", 1],
     ["Applied", 2],
