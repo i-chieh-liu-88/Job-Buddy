@@ -85,4 +85,10 @@ describe("ApplicationShell", () => {
     expect(main).toHaveClass("min-w-0", "flex-1");
     expect(screen.getByRole("navigation").parentElement).toBe(main.parentElement);
   });
+
+  it("retains the canvas and ink styling on the shell wrapper", () => {
+    renderShell();
+    const shellWrapper = screen.getByRole("main").parentElement;
+    expect(shellWrapper).toHaveClass("bg-canvas", "text-ink");
+  });
 });

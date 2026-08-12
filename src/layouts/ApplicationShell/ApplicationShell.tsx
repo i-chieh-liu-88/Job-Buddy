@@ -40,6 +40,7 @@ export function ApplicationShell({
     <AnimatedSidebarProvider
       open={isSidebarOpen}
       onOpenChange={handleSidebarOpenChange}
+      className="bg-canvas text-ink"
       style={{
         "--sidebar-width": "14rem",
         "--sidebar-width-icon": "4.25rem",
