@@ -1,6 +1,8 @@
+import { type ComponentProps, useState } from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AnimatedSidebarProvider } from "../../atoms/AnimatedSidebar/AnimatedSidebar";
 import { ApplicationNavigation } from "./ApplicationNavigation";
 
 const stageCounts = {
@@ -11,17 +13,60 @@ const stageCounts = {
   rejected: 0,
 };
 
+const defaultProps: ComponentProps<typeof ApplicationNavigation> = {
+  accountMenu: <button type="button">Account menu</button>,
+  isAddDisabled: false,
+  onAddApplication: vi.fn(),
+  stageCounts: {
+    saved: 1,
+    applied: 2,
+    interview: 3,
+    offer: 4,
+    rejected: 5,
+  },
+};
+
+function renderNavigation(
+  props: ComponentProps<typeof ApplicationNavigation>,
+  { initialOpen = true }: { initialOpen?: boolean } = {},
+) {
+  function Harness() {
+    const [open, setOpen] = useState(initialOpen);
+
+    return (
+      <AnimatedSidebarProvider open={open} onOpenChange={setOpen}>
+        <ApplicationNavigation {...props} />
+      </AnimatedSidebarProvider>
+    );
+  }
+
+  return render(<Harness />);
+}
+
+function mockDesktopViewport() {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+}
+
 describe("ApplicationNavigation", () => {
+  beforeEach(() => mockDesktopViewport());
+
   it("opens the mobile drawer and restores menu focus after every close path", async () => {
     const user = userEvent.setup();
-    render(
-      <ApplicationNavigation
-        accountMenu={<button type="button">Account menu</button>}
-        isAddDisabled={false}
-        onAddApplication={vi.fn()}
-        stageCounts={stageCounts}
-      />,
-    );
+    renderNavigation({
+      accountMenu: <button type="button">Account menu</button>,
+      isAddDisabled: false,
+      onAddApplication: vi.fn(),
+      stageCounts,
+    });
     const menuButton = screen.getByRole("button", { name: "Open navigation" });
 
     await user.click(menuButton);
@@ -47,14 +92,12 @@ describe("ApplicationNavigation", () => {
 
   it("shows counts and unavailable destinations inside the mobile drawer", async () => {
     const user = userEvent.setup();
-    render(
-      <ApplicationNavigation
-        accountMenu={<button type="button">Account menu</button>}
-        isAddDisabled={false}
-        onAddApplication={vi.fn()}
-        stageCounts={stageCounts}
-      />,
-    );
+    renderNavigation({
+      accountMenu: <button type="button">Account menu</button>,
+      isAddDisabled: false,
+      onAddApplication: vi.fn(),
+      stageCounts,
+    });
 
     await user.click(screen.getByRole("button", { name: "Open navigation" }));
     const drawer = screen.getByRole("dialog", { name: "Job Buddy navigation" });
@@ -75,14 +118,12 @@ describe("ApplicationNavigation", () => {
   });
 
   it("shows current and future navigation with the application stage summary", () => {
-    render(
-      <ApplicationNavigation
-        accountMenu={<button type="button">Account menu</button>}
-        isAddDisabled={false}
-        onAddApplication={vi.fn()}
-        stageCounts={stageCounts}
-      />,
-    );
+    renderNavigation({
+      accountMenu: <button type="button">Account menu</button>,
+      isAddDisabled: false,
+      onAddApplication: vi.fn(),
+      stageCounts,
+    });
 
     const navigation = screen.getByRole("navigation", {
       name: "Applications",
@@ -108,14 +149,13 @@ describe("ApplicationNavigation", () => {
   it("reports each exact Add application opener and honors the disabled state", async () => {
     const onAddApplication = vi.fn();
     const user = userEvent.setup();
-    const { rerender } = render(
-      <ApplicationNavigation
-        accountMenu={<button type="button">Account menu</button>}
-        isAddDisabled={false}
-        onAddApplication={onAddApplication}
-        stageCounts={stageCounts}
-      />,
-    );
+    const navigationProps = {
+      accountMenu: <button type="button">Account menu</button>,
+      isAddDisabled: false,
+      onAddApplication,
+      stageCounts,
+    };
+    const mountedNavigation = renderNavigation(navigationProps);
     const addButtons = screen.getAllByRole("button", { name: "Add application" });
 
     expect(addButtons).toHaveLength(2);
@@ -126,19 +166,74 @@ describe("ApplicationNavigation", () => {
       expect(onAddApplication).toHaveBeenLastCalledWith(addButton);
     }
 
-    rerender(
-      <ApplicationNavigation
-        accountMenu={<button type="button">Account menu</button>}
-        isAddDisabled
-        onAddApplication={onAddApplication}
-        stageCounts={stageCounts}
-      />,
-    );
+    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    const collapsedAddButton = within(
+      screen.getByRole("complementary", { name: "Application navigation" }),
+    ).getByRole("button", { name: "Add application" });
+    await user.click(collapsedAddButton);
+    expect(onAddApplication).toHaveBeenLastCalledWith(collapsedAddButton);
+
+    mountedNavigation.unmount();
+    renderNavigation({ ...navigationProps, isAddDisabled: true });
 
     for (const addButton of screen.getAllByRole("button", {
       name: "Add application",
     })) {
       expect(addButton).toBeDisabled();
     }
+  });
+
+  it("morphs the light desktop panel without changing the dark workspace rail", async () => {
+    const user = userEvent.setup();
+    renderNavigation(defaultProps);
+
+    expect(screen.getByTestId("workspace-rail")).toHaveClass("w-16");
+    expect(screen.getByText("Workspace")).toBeInTheDocument();
+    const collapse = screen.getByRole("button", { name: "Collapse sidebar" });
+    expect(collapse).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(collapse);
+
+    expect(screen.queryByText("Workspace")).not.toBeInTheDocument();
+    const expand = screen.getByRole("button", { name: "Expand sidebar" });
+    expect(expand).toHaveAttribute("aria-expanded", "false");
+    expect(expand).toHaveFocus();
+    expect(
+      screen.getByRole("complementary", { name: "Application navigation" }),
+    ).toHaveAttribute("data-state", "collapsed");
+  });
+
+  it("keeps collapsed controls named, titled, and disabled where required", () => {
+    renderNavigation(defaultProps, { initialOpen: false });
+    const desktopNavigation = within(
+      screen.getByRole("complementary", { name: "Application navigation" }),
+    );
+
+    expect(
+      desktopNavigation.getByRole("button", { name: "Add application" }),
+    ).toHaveAttribute("title", "Add application");
+    expect(desktopNavigation.getByRole("link", { name: "Applications" })).toHaveAttribute(
+      "title",
+      "Applications",
+    );
+    for (const label of ["Stats", "Reminders", "Export"]) {
+      const item = desktopNavigation.getByRole("button", { name: label });
+      expect(item).toBeDisabled();
+      expect(item).toHaveAttribute("title", label);
+    }
+  });
+
+  it.each([
+    ["Saved", 1],
+    ["Applied", 2],
+    ["Interview", 3],
+    ["Offer", 4],
+    ["Rejected", 5],
+  ])("describes the collapsed %s stage count", (stage, count) => {
+    renderNavigation(defaultProps, { initialOpen: false });
+
+    expect(
+      screen.getByLabelText(`${stage} · ${count} applications`),
+    ).toHaveAttribute("title", `${stage} · ${count} applications`);
   });
 });

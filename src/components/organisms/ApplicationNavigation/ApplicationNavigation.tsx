@@ -1,6 +1,28 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import {
+  BarChart3,
+  Bell,
+  BriefcaseBusiness,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  LayoutDashboard,
+  Plus,
+} from "lucide-react";
+import {
+  AnimatedSidebar,
+  AnimatedSidebarContent,
+  AnimatedSidebarFooter,
+  AnimatedSidebarHeader,
+  AnimatedSidebarMenu,
+  AnimatedSidebarMenuButton,
+  AnimatedSidebarMenuItem,
+  AnimatedSidebarRail,
+  useAnimatedSidebar,
+} from "../../atoms/AnimatedSidebar/AnimatedSidebar";
+import { cn } from "../../../lib/cn";
+import {
   JOB_APPLICATION_STATUS_ORDER,
   JOB_APPLICATION_STATUS_PRESENTATION,
 } from "../../../lib/jobApplicationStatusPresentation";
@@ -16,6 +38,14 @@ type ApplicationNavigationProps = {
 };
 
 const futureNavigationItems = ["Stats", "Reminders", "Export"] as const;
+
+type DesktopDestination = {
+  disabled?: boolean;
+  href?: string;
+  icon: ReactNode;
+  isActive?: boolean;
+  label: string;
+};
 
 function StageSummary({
   stageCounts,
@@ -101,6 +131,231 @@ function ApplicationDestinations({
   );
 }
 
+function DesktopIdentity({ isCollapsed }: { isCollapsed: boolean }): ReactNode {
+  if (isCollapsed) {
+    return (
+      <div
+        className="grid size-10 place-items-center self-center rounded-xl bg-hover text-ink"
+        title="Workspace"
+      >
+        <BriefcaseBusiness aria-hidden="true" className="size-5" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+        Job Buddy
+      </p>
+      <p className="mt-1 text-lg font-semibold text-ink">Workspace</p>
+    </div>
+  );
+}
+
+function DesktopAddApplicationButton(props: {
+  disabled: boolean;
+  isCollapsed: boolean;
+  onAddApplication: (opener: HTMLButtonElement) => void;
+}): ReactNode {
+  const { disabled, isCollapsed, onAddApplication } = props;
+
+  return (
+    <button
+      type="button"
+      className={cn(
+        "mt-3 inline-flex min-h-10 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-ink transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:transition-none",
+        isCollapsed ? "size-10 self-center p-0" : "px-4 py-2",
+      )}
+      aria-label={isCollapsed ? "Add application" : undefined}
+      title={isCollapsed ? "Add application" : undefined}
+      disabled={disabled}
+      onClick={(event) => onAddApplication(event.currentTarget)}
+    >
+      <Plus aria-hidden="true" className="size-4" />
+      {!isCollapsed ? <span className="ml-2">Add application</span> : null}
+    </button>
+  );
+}
+
+function DesktopApplicationDestinations(props: {
+  isCollapsed: boolean;
+  stageCounts: ApplicationStageCounts;
+}): ReactNode {
+  const { isCollapsed, stageCounts } = props;
+
+  const destinations: readonly DesktopDestination[] = [
+    {
+      label: "Applications",
+      icon: <LayoutDashboard className="size-4" />,
+      href: "/",
+      isActive: true,
+    },
+    {
+      label: "Stats",
+      icon: <BarChart3 className="size-4" />,
+      disabled: true,
+    },
+    {
+      label: "Reminders",
+      icon: <Bell className="size-4" />,
+      disabled: true,
+    },
+    {
+      label: "Export",
+      icon: <Download className="size-4" />,
+      disabled: true,
+    },
+  ];
+
+  return (
+    <nav aria-label="Applications">
+      <AnimatedSidebarMenu>
+        {destinations.map((destination) => (
+          <AnimatedSidebarMenuItem key={destination.label}>
+            <AnimatedSidebarMenuButton
+              href={destination.href}
+              icon={destination.icon}
+              isActive={destination.isActive}
+              disabled={destination.disabled}
+              aria-label={
+                destination.disabled
+                  ? isCollapsed
+                    ? destination.label
+                    : `${destination.label} — Soon`
+                  : undefined
+              }
+              title={isCollapsed ? destination.label : undefined}
+              badge={
+                destination.disabled && !isCollapsed ? (
+                  <span className="text-[0.625rem] font-semibold uppercase tracking-wider">
+                    Soon
+                  </span>
+                ) : undefined
+              }
+            >
+              {destination.label}
+            </AnimatedSidebarMenuButton>
+          </AnimatedSidebarMenuItem>
+        ))}
+      </AnimatedSidebarMenu>
+
+      <section
+        className="mt-6"
+        aria-labelledby={isCollapsed ? undefined : "desktop-stage-summary-title"}
+      >
+        {!isCollapsed ? (
+          <h2
+            id="desktop-stage-summary-title"
+            className="px-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted"
+          >
+            Pipeline
+          </h2>
+        ) : null}
+        <ul className={cn(!isCollapsed && "mt-3", "space-y-1")}>
+          {JOB_APPLICATION_STATUS_ORDER.map((status) => {
+            const presentation = JOB_APPLICATION_STATUS_PRESENTATION[status];
+            const description = `${presentation.label} · ${stageCounts[status]} applications`;
+
+            return (
+              <li
+                key={status}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted",
+                  isCollapsed && "justify-center px-0",
+                )}
+              >
+                <span
+                  className={`size-2 shrink-0 rounded-full ${presentation.indicatorClassName}`}
+                  aria-hidden={isCollapsed ? undefined : true}
+                  aria-label={isCollapsed ? description : undefined}
+                  title={isCollapsed ? description : undefined}
+                />
+                {!isCollapsed ? (
+                  <>
+                    <span className="min-w-0 flex-1">{presentation.label}</span>
+                    <span className="tabular-nums" aria-label={`${stageCounts[status]} applications`}>
+                      {stageCounts[status]}
+                    </span>
+                  </>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    </nav>
+  );
+}
+
+function DesktopApplicationNavigation({
+  accountMenu,
+  isAddDisabled,
+  onAddApplication,
+  stageCounts,
+}: ApplicationNavigationProps): ReactNode {
+  const { open, state } = useAnimatedSidebar();
+  const isCollapsed = state === "collapsed";
+
+  return (
+    <div className="hidden min-h-screen shrink-0 md:flex">
+      <aside
+        data-testid="workspace-rail"
+        className="flex w-16 shrink-0 flex-col items-center border-r border-line bg-ink py-4 text-white"
+        aria-label="Job Buddy workspace"
+      >
+        <span className="grid size-9 place-items-center rounded-lg bg-primary text-xs font-bold text-ink">
+          JB
+        </span>
+        <span
+          className="mt-6 grid size-9 place-items-center rounded-lg bg-white/12 text-sm font-semibold"
+          aria-current="page"
+          aria-label="Applications workspace"
+        >
+          A
+        </span>
+      </aside>
+      <AnimatedSidebar
+        ariaLabel="Application navigation"
+        collapsible="icon"
+        desktopOnly
+        side="left"
+        className="border-r border-line bg-surface text-ink"
+      >
+        <AnimatedSidebarHeader>
+          <DesktopIdentity isCollapsed={isCollapsed} />
+          <DesktopAddApplicationButton
+            isCollapsed={isCollapsed}
+            disabled={isAddDisabled}
+            onAddApplication={onAddApplication}
+          />
+        </AnimatedSidebarHeader>
+        <AnimatedSidebarContent>
+          <DesktopApplicationDestinations
+            isCollapsed={isCollapsed}
+            stageCounts={stageCounts}
+          />
+        </AnimatedSidebarContent>
+        <AnimatedSidebarFooter>
+          {!isCollapsed ? <p className="mb-2 text-xs text-muted">Signed in</p> : null}
+          <div className={cn(isCollapsed && "flex justify-center")}>{accountMenu}</div>
+        </AnimatedSidebarFooter>
+        <AnimatedSidebarRail
+          aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
+          aria-expanded={open}
+          title={open ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {open ? (
+            <ChevronLeft aria-hidden="true" className="size-4" />
+          ) : (
+            <ChevronRight aria-hidden="true" className="size-4" />
+          )}
+        </AnimatedSidebarRail>
+      </AnimatedSidebar>
+    </div>
+  );
+}
+
 export function ApplicationNavigation({
   accountMenu,
   isAddDisabled,
@@ -142,53 +397,12 @@ export function ApplicationNavigation({
 
   return (
     <>
-      <div className="hidden min-h-screen shrink-0 md:flex">
-        <aside
-          className="flex w-16 flex-col items-center border-r border-line bg-ink py-4 text-white"
-          aria-label="Job Buddy workspace"
-        >
-          <span className="grid size-9 place-items-center rounded-lg bg-primary text-xs font-bold text-ink">
-            JB
-          </span>
-          <span
-            className="mt-6 grid size-9 place-items-center rounded-lg bg-white/12 text-sm font-semibold"
-            aria-current="page"
-            aria-label="Applications workspace"
-          >
-            A
-          </span>
-        </aside>
-
-        <aside className="flex w-56 flex-col border-r border-line bg-surface px-3 py-5">
-          <div className="px-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-              Job Buddy
-            </p>
-            <p className="mt-1 text-lg font-semibold text-ink">Workspace</p>
-          </div>
-
-          <button
-            type="button"
-            className="mt-5 min-h-10 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:transition-none"
-            disabled={isAddDisabled}
-            onClick={(event) => onAddApplication(event.currentTarget)}
-          >
-            <span aria-hidden="true">＋</span> Add application
-          </button>
-
-          <nav className="mt-6" aria-label="Applications">
-            <ApplicationDestinations
-              stageCounts={stageCounts}
-              summaryTitleId="desktop-stage-summary-title"
-            />
-          </nav>
-
-          <div className="mt-auto border-t border-line px-3 pt-4">
-            <p className="mb-2 text-xs text-muted">Signed in</p>
-            {accountMenu}
-          </div>
-        </aside>
-      </div>
+      <DesktopApplicationNavigation
+        accountMenu={accountMenu}
+        isAddDisabled={isAddDisabled}
+        onAddApplication={onAddApplication}
+        stageCounts={stageCounts}
+      />
 
       <header className="fixed inset-x-0 top-0 z-20 flex min-h-16 items-center gap-3 border-b border-line bg-canvas px-4 md:hidden">
         <button
