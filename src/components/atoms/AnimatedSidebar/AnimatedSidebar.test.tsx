@@ -44,7 +44,11 @@ function StateProbe() {
 function Harness({ initialOpen = true, desktopOnly = false }) {
   const [open, setOpen] = useState(initialOpen);
   return (
-    <AnimatedSidebarProvider open={open} onOpenChange={setOpen}>
+    <AnimatedSidebarProvider
+      open={open}
+      onOpenChange={setOpen}
+      data-testid="sidebar-wrapper"
+    >
       <AnimatedSidebar desktopOnly={desktopOnly} data-testid="sidebar">
         <AnimatedSidebarMenu>
           <AnimatedSidebarMenuItem>
@@ -73,6 +77,15 @@ function Harness({ initialOpen = true, desktopOnly = false }) {
 
 describe("AnimatedSidebar", () => {
   beforeEach(() => mockViewport(false));
+
+  it("provides the required desktop panel and rail widths", () => {
+    render(<Harness />);
+    const wrapper = screen.getByTestId("sidebar-wrapper");
+    expect(wrapper.style.getPropertyValue("--sidebar-width")).toBe("14rem");
+    expect(wrapper.style.getPropertyValue("--sidebar-width-icon")).toBe(
+      "4.25rem",
+    );
+  });
 
   it("renders controlled expanded and collapsed states with an accessible rail", () => {
     render(<Harness />);
