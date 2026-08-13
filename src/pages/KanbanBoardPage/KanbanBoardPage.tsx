@@ -1,4 +1,5 @@
 import { UserButton } from "@clerk/clerk-react";
+import { PanelLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AddJobApplicationModal } from "../../components/organisms/AddJobApplicationModal/AddJobApplicationModal";
 import type { JobApplicationFormData } from "../../components/molecules/JobApplicationFormFields/jobApplicationFormSchema";
@@ -6,6 +7,9 @@ import {
   ApplicationNavigation,
   type ApplicationStageCounts,
 } from "../../components/organisms/ApplicationNavigation/ApplicationNavigation";
+import { AnimatedSidebarTrigger } from "../../components/atoms/AnimatedSidebar/AnimatedSidebar";
+import { TextReveal } from "../../components/atoms/TextReveal/TextReveal";
+import { WorkspaceEngineeringGrid } from "../../components/backgrounds/WorkspaceEngineeringGrid/WorkspaceEngineeringGrid";
 import { JobApplicationDetailDrawer } from "../../components/organisms/JobApplicationDetailDrawer/JobApplicationDetailDrawer";
 import { KanbanBoard } from "../../components/organisms/KanbanBoard/KanbanBoard";
 import {
@@ -192,25 +196,56 @@ export function KanbanBoardPage() {
         />
       }
     >
-      <div className="min-h-screen bg-canvas px-4 pb-6 pt-24 text-ink sm:px-6 md:py-8 lg:px-8">
-        <div className="mx-auto max-w-[96rem]">
-          <header className="mb-8">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-focus">
-              Job Buddy
-            </p>
-            <h1
-              ref={applicationsHeadingRef}
-              className="mt-2 text-3xl font-bold tracking-tight"
-              tabIndex={-1}
-            >
-              Applications
-            </h1>
-            <p className="mt-2 text-muted">
-              Track every opportunity from saved to final decision.
-            </p>
-          </div>
-          </header>
+      <div className="relative min-h-screen overflow-hidden bg-canvas pb-8 pt-16 text-ink md:pt-0">
+        <WorkspaceEngineeringGrid />
+        <div className="relative z-10">
+        <header className="flex h-16 items-center gap-3 border-b border-line/80 bg-canvas/85 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+          <AnimatedSidebarTrigger
+            aria-label="Toggle sidebar"
+            title="Toggle sidebar"
+            className="hidden text-muted transition-colors hover:bg-hover hover:text-ink md:inline-flex"
+          >
+            <PanelLeft aria-hidden="true" className="size-4" />
+          </AnimatedSidebarTrigger>
+          <p className="text-sm font-medium text-ink">Applications</p>
+        </header>
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[96rem]">
+            <header className="mb-8 pt-10 md:pt-14">
+              <TextReveal
+                as="p"
+                className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-muted"
+                delay={0.05}
+                stagger={0.05}
+                text="Your job search workspace"
+              />
+              <h1
+                ref={applicationsHeadingRef}
+                className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl md:text-6xl"
+                tabIndex={-1}
+              >
+                <TextReveal
+                delay={0.15}
+                split="char"
+                stagger={0.035}
+                text="Applications"
+                />
+              </h1>
+              <TextReveal
+                as="h2"
+                className="mt-7 text-xl font-semibold tracking-[-0.02em] text-ink"
+                delay={0.36}
+                stagger={0.07}
+                text="Keep moving forward."
+              />
+              <TextReveal
+                as="p"
+                className="mt-2 max-w-2xl text-sm leading-6 text-muted"
+                delay={0.52}
+                stagger={0.025}
+                text="Keep every opportunity organized, from the first saved role to the final decision."
+              />
+            </header>
 
           {applicationsQuery.isPending ? (
             <p role="status" className="text-muted">
@@ -226,7 +261,7 @@ export function KanbanBoardPage() {
               ) : null}
             </div>
           ) : (
-            <div className="w-full overflow-x-visible pb-4 md:overflow-x-auto">
+            <div className="w-full pb-4">
               <KanbanBoard
                 applications={applications}
                 isUpdating={reorderApplications.isPending}
@@ -268,6 +303,8 @@ export function KanbanBoardPage() {
               open={isDetailOpen}
             />
           ) : null}
+          </div>
+        </div>
         </div>
       </div>
     </ApplicationShell>

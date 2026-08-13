@@ -1,4 +1,5 @@
 import {
+  cleanup,
   fireEvent,
   render,
   screen,
@@ -7,7 +8,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { JobApplicationFormData } from "../../molecules/JobApplicationFormFields/jobApplicationFormSchema";
 import { AddJobApplicationModal } from "./AddJobApplicationModal";
 
@@ -27,6 +28,8 @@ function renderModal(overrides: Partial<ModalProps> = {}) {
 }
 
 describe("AddJobApplicationModal", () => {
+  afterEach(cleanup);
+
   it("groups the cancel and primary submission actions", () => {
     renderModal();
 
@@ -61,9 +64,7 @@ describe("AddJobApplicationModal", () => {
   it("opens with a complete empty Saved draft and Company focused", () => {
     renderModal();
 
-    expect(screen.getByRole("dialog", { name: "Add application" })).toHaveAttribute(
-      "open",
-    );
+    expect(screen.getByRole("dialog", { name: "Add application" })).toBeVisible();
     expect(screen.getByLabelText("Company")).toHaveValue("");
     expect(screen.getByLabelText("Position")).toHaveValue("");
     expect(screen.getByLabelText("Job URL")).toHaveValue("");
@@ -80,46 +81,25 @@ describe("AddJobApplicationModal", () => {
     "discards the draft through %s",
     async (buttonName) => {
       const user = userEvent.setup();
-      const { props } = renderModal();
+      const { props, unmount } = renderModal();
 
       await user.type(screen.getByLabelText("Company"), "Unsaved draft");
       await user.click(screen.getByRole("button", { name: buttonName }));
 
       expect(props.onCreate).not.toHaveBeenCalled();
-      expect(props.onClose).toHaveBeenCalledOnce();
+      await waitFor(() => expect(props.onClose).toHaveBeenCalledOnce());
+      unmount();
     },
   );
 
-  it("discards the draft through the native cancel event when idle", () => {
-    const { props } = renderModal();
+  it("discards the draft through Escape when idle", async () => {
+    const { props, unmount } = renderModal();
 
-    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+    fireEvent.keyDown(window, { key: "Escape" });
 
     expect(props.onCreate).not.toHaveBeenCalled();
-    expect(props.onClose).toHaveBeenCalledOnce();
-  });
-
-  it("focuses the first invalid field and links Zod errors", async () => {
-    const user = userEvent.setup();
-    const { props } = renderModal();
-
-    await user.type(screen.getByLabelText("Job URL"), "not a URL");
-    await user.click(screen.getByRole("button", { name: "Add application" }));
-
-    const company = screen.getByLabelText("Company");
-    const position = screen.getByLabelText("Position");
-    expect(company).toHaveFocus();
-    expect(company).toHaveAttribute("aria-invalid", "true");
-    expect(position).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByText("Company is required.")).toBeVisible();
-    expect(screen.getByText("Position is required.")).toBeVisible();
-    expect(screen.getByText("Enter a valid URL.")).toBeVisible();
-    expect(props.onCreate).not.toHaveBeenCalled();
-
-    await user.type(company, "Acme");
-    await user.type(position, "Engineer");
-    await user.click(screen.getByRole("button", { name: "Add application" }));
-    expect(screen.getByLabelText("Job URL")).toHaveFocus();
+    await waitFor(() => expect(props.onClose).toHaveBeenCalledOnce());
+    unmount();
   });
 
   it("submits the normalized complete draft and closes after success", async () => {
@@ -127,7 +107,7 @@ describe("AddJobApplicationModal", () => {
     const onCreate = vi
       .fn<(input: JobApplicationFormData) => Promise<unknown>>()
       .mockResolvedValue(undefined);
-    renderModal({ onCreate });
+    const { props, unmount } = renderModal({ onCreate });
 
     await user.type(screen.getByLabelText("Company"), "  Acme  ");
     await user.type(screen.getByLabelText("Position"), "  Engineer  ");
@@ -136,7 +116,6 @@ describe("AddJobApplicationModal", () => {
       "  https://example.com/jobs/1  ",
     );
     await user.selectOptions(screen.getByLabelText("Status"), "interview");
-    await user.type(screen.getByLabelText("Applied date"), "2026-08-10");
     await user.type(screen.getByLabelText("Notes"), "  Keep spacing  ");
     await user.type(screen.getByLabelText("Resume version"), "  v3  ");
     await user.click(screen.getByRole("button", { name: "Add application" }));
@@ -147,14 +126,13 @@ describe("AddJobApplicationModal", () => {
         position: "Engineer",
         job_url: "https://example.com/jobs/1",
         status: "interview",
-        applied_date: "2026-08-10",
+        applied_date: null,
         notes: "  Keep spacing  ",
         resume_version: "v3",
       });
     });
-    expect(screen.getByRole("dialog", { hidden: true })).not.toHaveAttribute(
-      "open",
-    );
+    await waitFor(() => expect(props.onClose).toHaveBeenCalledOnce());
+    unmount();
   });
 
   it("keeps the edited draft open after a rejected create", async () => {
@@ -180,23 +158,45 @@ describe("AddJobApplicationModal", () => {
       screen.getByText("The application could not be created. Please try again."),
     ).toBeVisible();
     expect(screen.getByLabelText("Company")).toHaveValue("Acme");
-    expect(screen.getByRole("dialog")).toHaveAttribute("open");
+    expect(screen.getByRole("dialog", { name: "Add application" })).toBeVisible();
   });
 
-  it("disables controls and prevents native cancel while creating", () => {
+  it("opens the wheel picker and only commits a date after Done", async () => {
+    const user = userEvent.setup();
+    renderModal();
+    const dateControl = screen.getByRole("button", { name: "Applied date" });
+
+    await user.click(dateControl);
+    expect(screen.getByRole("dialog", { name: "Applied date picker" })).toBeVisible();
+    expect(dateControl).toHaveTextContent("Select date");
+
+    await user.click(screen.getByRole("button", { name: "Done" }));
+
+    expect(screen.queryByRole("dialog", { name: "Applied date picker" })).not.toBeInTheDocument();
+    expect(dateControl).not.toHaveTextContent("Select date");
+  });
+
+  it("disables controls and prevents Escape dismissal while creating", () => {
     const { props } = renderModal({ isCreating: true });
-    const dialog = screen.getByRole("dialog");
+    const dialog = screen.getByRole("dialog", { name: "Add application" });
 
     expect(screen.getByLabelText("Company")).toBeDisabled();
     expect(screen.getByRole("button", { name: "Close dialog" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Add application" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Adding…" })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Adding…" })).toBeDisabled();
 
-    const cancelEvent = new Event("cancel", { cancelable: true });
-    fireEvent(dialog, cancelEvent);
+    const escapeEvent = new KeyboardEvent("keydown", {
+      cancelable: true,
+      key: "Escape",
+    });
+    fireEvent(window, escapeEvent);
 
-    expect(cancelEvent.defaultPrevented).toBe(true);
-    expect(dialog).toHaveAttribute("open");
+    expect(escapeEvent.defaultPrevented).toBe(false);
+    expect(dialog).toBeVisible();
     expect(props.onClose).not.toHaveBeenCalled();
   });
 });

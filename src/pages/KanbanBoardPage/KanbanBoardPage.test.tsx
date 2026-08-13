@@ -152,6 +152,16 @@ vi.mock("../../hooks/useJobApplications", () => ({
 
 describe("KanbanBoardPage", () => {
   beforeEach(() => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
     createMutateAsync.mockReset();
     createMutateAsync.mockResolvedValue(undefined);
     createReset.mockReset();
@@ -204,6 +214,47 @@ describe("KanbanBoardPage", () => {
     expect(
       within(navigation).getByText("Interview").closest("li"),
     ).toHaveTextContent("1");
+  });
+
+  it("renders the official sidebar toggle with the Applications workspace header", async () => {
+    const user = userEvent.setup();
+    render(<KanbanBoardPage />);
+
+    expect(screen.getByRole("button", { name: "Toggle sidebar" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByLabelText("Your job search workspace")).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Keep moving forward." }),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText(
+        "Keep every opportunity organized, from the first saved role to the final decision.",
+      ),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Toggle sidebar" }));
+
+    expect(screen.getByRole("button", { name: "Toggle sidebar" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("layers the engineering grid behind the authenticated workspace", () => {
+    render(<KanbanBoardPage />);
+
+    expect(screen.getByTestId("workspace-engineering-grid")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Applications" })).toBeVisible();
+  });
+
+  it("uses the display typography token for the workspace heading", () => {
+    render(<KanbanBoardPage />);
+
+    expect(screen.getByRole("heading", { name: "Applications" })).toHaveClass(
+      "font-display",
+    );
   });
 
   it("restores Add focus to each exact navigation opener", async () => {
@@ -265,7 +316,7 @@ describe("KanbanBoardPage", () => {
         order_index: 2_000,
       });
     });
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     await waitFor(() => expect(addButton).toHaveFocus());
   });
 
@@ -303,8 +354,8 @@ describe("KanbanBoardPage", () => {
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(createMutateAsync).not.toHaveBeenCalled();
-    expect(createReset).toHaveBeenCalledTimes(2);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(createReset).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     await waitFor(() => expect(addButton).toHaveFocus());
   });
 
@@ -337,7 +388,7 @@ describe("KanbanBoardPage", () => {
       screen.getByText("The application could not be created. Please try again."),
     ).toBeVisible();
     expect(screen.getByLabelText("Company")).toHaveValue("Acme draft");
-    expect(screen.getByRole("dialog")).toHaveAttribute("open");
+    expect(screen.getByRole("dialog", { name: "Add application" })).toBeVisible();
   });
 
   it("appends a moved application after destination cards before saving", async () => {

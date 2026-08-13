@@ -1,0 +1,94 @@
+<style>
+  .direction-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; align-items:start; }
+  .direction { cursor:pointer; border:1px solid #d8dbe2; border-radius:16px; overflow:hidden; background:#fff; transition:.18s ease; }
+  .direction:hover { transform:translateY(-2px); border-color:#8b93a7; box-shadow:0 12px 28px rgba(30,36,50,.10); }
+  .direction.selected { border-color:#5b73d6; box-shadow:0 0 0 3px rgba(91,115,214,.16); }
+  .preview { height:330px; display:flex; background:#f5f6f8; color:#303744; font:11px/1.35 Inter,system-ui,sans-serif; }
+  .rail { width:28px; padding:10px 6px; background:#20242b; color:#c7ccd6; display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .rail-dot { width:15px; height:15px; border-radius:5px; background:#677080; }
+  .rail-dot.active { background:#85cfa2; }
+  .side { width:112px; padding:14px 10px; background:#f0f1f3; border-right:1px solid #dcdfe4; display:flex; flex-direction:column; }
+  .brand { font-size:12px; font-weight:750; letter-spacing:-.02em; color:#252b35; margin-bottom:15px; }
+  .add { background:#566fd0; color:#fff; border-radius:7px; padding:7px 8px; font-weight:650; margin-bottom:14px; }
+  .navitem { padding:6px 7px; border-radius:6px; color:#697181; margin-bottom:3px; }
+  .navitem.active { background:#dde2ec; color:#273040; font-weight:650; }
+  .soon { opacity:.55; }
+  .stage-list { margin-top:15px; border-top:1px solid #d9dce2; padding-top:10px; }
+  .stage { display:flex; justify-content:space-between; color:#717988; padding:4px 6px; }
+  .account { margin-top:auto; border-top:1px solid #d9dce2; padding:10px 5px 0; color:#596171; }
+  .workspace { flex:1; min-width:0; padding:14px; overflow:hidden; }
+  .topline { display:flex; justify-content:space-between; align-items:center; margin-bottom:13px; }
+  .title { font-size:15px; font-weight:760; letter-spacing:-.02em; }
+  .avatar { width:19px; height:19px; border-radius:50%; background:#d7b1dc; }
+  .columns { display:flex; gap:10px; height:270px; }
+  .column { flex:0 0 105px; background:#eceef1; border:1px solid #e0e3e8; border-radius:9px; padding:8px; }
+  .column-head { display:flex; justify-content:space-between; font-weight:680; margin-bottom:8px; }
+  .count { color:#8a919d; font-weight:550; }
+  .task { background:#fff; border:1px solid #dde1e7; border-radius:7px; padding:9px; margin-bottom:7px; box-shadow:0 1px 2px rgba(30,36,50,.04); }
+  .task b { display:block; font-size:10px; color:#333b48; margin-bottom:4px; }
+  .meta { color:#8a919e; font-size:9px; }
+  .empty { color:#969da8; border:1px dashed #d4d8df; border-radius:7px; padding:12px 6px; text-align:center; }
+  .body { padding:14px 15px 16px; }
+  .body h3 { margin:0 0 5px; font-size:15px; }
+  .body p { margin:0; color:#71798a; font-size:12px; line-height:1.5; }
+  .recommended { display:inline-block; margin-top:10px; padding:3px 7px; border-radius:999px; background:#e7edff; color:#4d64bd; font-size:10px; font-weight:700; }
+  .dark .preview { background:#191c20; color:#edf0f5; }
+  .dark .side { background:#282c31; border-color:#42474f; }
+  .dark .brand,.dark .navitem.active { color:#f0f2f6; }
+  .dark .navitem.active { background:#454a51; }
+  .dark .stage,.dark .navitem,.dark .account { color:#adb3bd; }
+  .dark .stage-list,.dark .account { border-color:#454a50; }
+  .dark .column { background:#23272c; border-color:#23272c; }
+  .dark .task { background:#292d32; border-color:#464b53; box-shadow:none; }
+  .dark .task b { color:#edf0f5; }
+  .compact .rail { display:none; }
+  .compact .side { width:74px; padding-left:8px; padding-right:8px; }
+  .compact .stage-list { display:none; }
+  .compact .navitem { white-space:nowrap; overflow:hidden; }
+  @media (max-width: 1000px) { .direction-grid { grid-template-columns:1fr; } .preview { height:310px; } }
+</style>
+
+<h2>Which Jobuddy workspace layout feels right?</h2>
+<p class="subtitle">All three preserve horizontal Kanban scrolling on small screens. Choose based on the desktop sidebar density and daily-use calmness.</p>
+
+<div class="direction-grid">
+  <div class="direction dark" data-choice="asana-faithful" onclick="toggleSelect(this)">
+    <div class="preview">
+      <aside class="rail"><span class="rail-dot active"></span><span class="rail-dot"></span><span class="rail-dot"></span></aside>
+      <aside class="side">
+        <div class="brand">JOB BUDDY</div><div class="add">＋ Add</div>
+        <div class="navitem active">Applications</div><div class="navitem soon">Stats</div><div class="navitem soon">Reminders</div><div class="navitem soon">Export</div>
+        <div class="stage-list"><div class="stage"><span>Saved</span><span>3</span></div><div class="stage"><span>Applied</span><span>5</span></div><div class="stage"><span>Interview</span><span>2</span></div></div>
+        <div class="account">Account</div>
+      </aside>
+      <main class="workspace"><div class="topline"><div class="title">Applications</div><div class="avatar"></div></div><div class="columns"><div class="column"><div class="column-head"><span>Saved</span><span class="count">3</span></div><div class="task"><b>Product Designer</b><span class="meta">Northstar</span></div><div class="task"><b>Frontend Engineer</b><span class="meta">Acme</span></div></div><div class="column"><div class="column-head"><span>Applied</span><span class="count">5</span></div><div class="task"><b>Design Engineer</b><span class="meta">Luma · Aug 11</span></div></div></div></main>
+    </div>
+    <div class="body"><h3>A · Asana-faithful dark workspace</h3><p>Closest to the screenshot: two-level navigation, dense dark canvas, low-radius cards.</p></div>
+  </div>
+
+  <div class="direction" data-choice="calm-hybrid" onclick="toggleSelect(this)">
+    <div class="preview">
+      <aside class="rail"><span class="rail-dot active"></span><span class="rail-dot"></span><span class="rail-dot"></span></aside>
+      <aside class="side">
+        <div class="brand">JOB BUDDY</div><div class="add">＋ Add application</div>
+        <div class="navitem active">Applications</div><div class="navitem soon">Stats · Soon</div><div class="navitem soon">Reminders · Soon</div><div class="navitem soon">Export · Soon</div>
+        <div class="stage-list"><div class="stage"><span>Saved</span><span>3</span></div><div class="stage"><span>Applied</span><span>5</span></div><div class="stage"><span>Interview</span><span>2</span></div><div class="stage"><span>Offer</span><span>1</span></div><div class="stage"><span>Rejected</span><span>4</span></div></div>
+        <div class="account">Ichieh</div>
+      </aside>
+      <main class="workspace"><div class="topline"><div><div class="title">Applications</div><span class="meta">Your job search, organized.</span></div><div class="avatar"></div></div><div class="columns"><div class="column"><div class="column-head"><span>Saved (3)</span></div><div class="task"><b>Product Designer</b><span class="meta">Northstar · 🔗</span></div><div class="task"><b>Frontend Engineer</b><span class="meta">Acme</span></div></div><div class="column"><div class="column-head"><span>Applied (5)</span></div><div class="task"><b>Design Engineer</b><span class="meta">Luma · Aug 11</span></div></div><div class="column"><div class="column-head"><span>Offer (0)</span></div><div class="empty">No applications yet</div></div></div></main>
+    </div>
+    <div class="body"><h3>B · Calm Asana hybrid</h3><p>Asana's spatial hierarchy with Jobuddy's light, quiet palette and clearer daily-use metadata.</p><span class="recommended">Recommended</span></div>
+  </div>
+
+  <div class="direction compact" data-choice="compact-workspace" onclick="toggleSelect(this)">
+    <div class="preview">
+      <aside class="side">
+        <div class="brand">JB</div><div class="add">＋ Add</div>
+        <div class="navitem active">Applications</div><div class="navitem soon">Stats</div><div class="navitem soon">Reminders</div><div class="navitem soon">Export</div>
+        <div class="account">Account</div>
+      </aside>
+      <main class="workspace"><div class="topline"><div class="title">Applications</div><div class="avatar"></div></div><div class="columns"><div class="column"><div class="column-head"><span>Saved (3)</span></div><div class="task"><b>Product Designer</b><span class="meta">Northstar · 🔗</span></div></div><div class="column"><div class="column-head"><span>Interview (2)</span></div><div class="task"><b>Design Engineer</b><span class="meta">Luma · Aug 11</span></div></div><div class="column"><div class="column-head"><span>Offer (0)</span></div><div class="empty">No applications yet</div></div></div></main>
+    </div>
+    <div class="body"><h3>C · Compact workspace</h3><p>More board area and less navigation context; efficient, but less faithful to the Asana reference.</p></div>
+  </div>
+</div>

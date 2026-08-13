@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { CSSProperties } from "react";
 import { JOB_APPLICATION_STATUS_PRESENTATION } from "../../../lib/jobApplicationStatusPresentation";
 import type { JobApplication } from "../../../types/database";
+import { TiltCard } from "../../atoms/TiltCard/TiltCard";
 
 export type SelectJobApplication = (
   application: JobApplication,
@@ -87,7 +88,7 @@ export function JobApplicationCardPreview({
 }: Pick<JobApplicationCardProps, "application">) {
   return (
     <article
-      className="rotate-1 rounded-xl border border-line bg-canvas p-4 shadow-lg"
+      className="rotate-1 rounded-lg border border-line bg-surface p-5 shadow-lg"
       aria-label={`${application.position} at ${application.company}`}
     >
       <JobApplicationCardContent application={application} />
@@ -122,32 +123,34 @@ export function JobApplicationCard({
     <article
       ref={setNodeRef}
       style={dragStyle}
-      className={`group flex items-stretch overflow-hidden rounded-xl border border-line bg-canvas shadow-[0_1px_2px_rgba(30,31,33,0.06)] transition-[border-color,box-shadow,opacity] hover:border-muted/40 hover:shadow-[0_2px_8px_rgba(30,31,33,0.08)] motion-reduce:transition-none ${
+      className={`group ${
         isDragging ? "relative z-10 opacity-30" : ""
       }`}
       aria-label={`${application.position} at ${application.company}`}
     >
-      <button
-        type="button"
-        className="min-w-0 flex-1 p-4 text-left transition-colors hover:bg-hover/35 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus disabled:cursor-not-allowed motion-reduce:transition-none"
-        aria-label={`Open ${application.position} at ${application.company}`}
-        data-application-opener={application.id}
-        disabled={isDisabled}
-        onClick={(event) => onSelect(application, event.currentTarget)}
-      >
-        <JobApplicationCardContent application={application} />
-      </button>
-      <button
-        ref={setActivatorNodeRef}
-        type="button"
-        className="min-w-11 touch-none self-stretch border-l border-line px-3 text-muted transition-colors hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
-        aria-label={`Drag ${application.position} at ${application.company}`}
-        disabled={isDisabled}
-        {...attributes}
-        {...listeners}
-      >
-        <span aria-hidden="true">↕</span>
-      </button>
+      <TiltCard className="flex items-stretch rounded-lg border border-line bg-surface shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow] hover:border-primary/70 hover:shadow-[0_14px_26px_rgba(0,0,0,0.32)] motion-reduce:transition-none">
+        <button
+          type="button"
+          className="min-w-0 flex-1 p-5 text-left transition-colors hover:bg-hover/70 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus disabled:cursor-not-allowed motion-reduce:transition-none"
+          aria-label={`Open ${application.position} at ${application.company}`}
+          data-application-opener={application.id}
+          disabled={isDisabled}
+          onClick={(event) => onSelect(application, event.currentTarget)}
+        >
+          <JobApplicationCardContent application={application} />
+        </button>
+        <button
+          ref={setActivatorNodeRef}
+          type="button"
+          className="min-w-11 touch-none self-stretch border-l border-line/90 px-3 text-muted transition-colors hover:bg-hover/50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+          aria-label={`Drag ${application.position} at ${application.company}`}
+          disabled={isDisabled}
+          {...attributes}
+          {...listeners}
+        >
+          <span aria-hidden="true">↕</span>
+        </button>
+      </TiltCard>
     </article>
   );
 }

@@ -8,8 +8,8 @@ import {
   ChevronRight,
   Download,
   LayoutDashboard,
-  Plus,
 } from "lucide-react";
+import { AddApplicationButton } from "../../atoms/AddApplicationButton/AddApplicationButton";
 import {
   AnimatedSidebar,
   AnimatedSidebarContent,
@@ -161,20 +161,11 @@ function DesktopAddApplicationButton(props: {
   const { disabled, isCollapsed, onAddApplication } = props;
 
   return (
-    <button
-      type="button"
-      className={cn(
-        "mt-3 inline-flex min-h-10 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-ink transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:transition-none",
-        isCollapsed ? "size-10 self-center p-0" : "px-4 py-2",
-      )}
-      aria-label={isCollapsed ? "Add application" : undefined}
-      title={isCollapsed ? "Add application" : undefined}
+    <AddApplicationButton
+      collapsed={isCollapsed}
       disabled={disabled}
       onClick={(event) => onAddApplication(event.currentTarget)}
-    >
-      <Plus aria-hidden="true" className="size-4" />
-      {!isCollapsed ? <span className="ml-2">Add application</span> : null}
-    </button>
+    />
   );
 }
 
@@ -305,7 +296,7 @@ function DesktopApplicationNavigation({
     <div className="hidden min-h-screen shrink-0 md:flex">
       <aside
         data-testid="workspace-rail"
-        className="flex w-16 shrink-0 flex-col items-center border-r border-line bg-ink py-4 text-white"
+        className="flex w-16 shrink-0 flex-col items-center border-r border-line bg-canvas py-4 text-white"
         aria-label="Job Buddy workspace"
       >
         <span className="grid size-9 place-items-center rounded-lg bg-primary text-xs font-bold text-ink">
@@ -421,20 +412,16 @@ export function ApplicationNavigation({
         <span className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[0.08em] text-ink">
           JOB BUDDY
         </span>
-        <button
-          type="button"
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-3 text-sm font-semibold text-ink transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:transition-none"
+        <AddApplicationButton
           disabled={isAddDisabled}
           onClick={(event) => onAddApplication(event.currentTarget)}
-        >
-          <span aria-hidden="true">＋</span> Add application
-        </button>
+        />
       </header>
 
       <dialog
         ref={drawerRef}
         aria-label="Job Buddy navigation"
-        className="fixed inset-y-0 left-0 m-0 h-dvh max-h-dvh w-[min(20rem,calc(100vw-2rem))] max-w-none overflow-hidden border-0 border-r border-line bg-surface p-0 text-ink shadow-[0_16px_48px_rgba(30,31,33,0.2)] backdrop:bg-ink/30 open:flex open:flex-col md:hidden"
+        className="fixed inset-y-0 left-0 m-0 h-dvh max-h-dvh w-[min(20rem,calc(100vw-2rem))] max-w-none overflow-hidden border-0 border-r border-line bg-surface p-0 text-ink shadow-[0_16px_48px_rgba(0,0,0,0.45)] backdrop:bg-black/65 open:flex open:flex-col md:hidden"
         onCancel={(event) => {
           event.preventDefault();
           closeDrawer();

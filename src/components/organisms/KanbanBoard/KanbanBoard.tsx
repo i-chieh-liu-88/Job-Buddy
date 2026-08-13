@@ -76,7 +76,7 @@ export function KanbanBoard({
       onDragCancel={() => setActiveId(null)}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex w-full flex-col gap-4 md:min-w-max md:flex-row">
+      <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-5">
         {JOB_APPLICATION_STATUS_ORDER.map((status) => {
           const { label } = JOB_APPLICATION_STATUS_PRESENTATION[status];
           const columnApplications = applications
@@ -84,7 +84,7 @@ export function KanbanBoard({
             .sort((left, right) => left.order_index - right.order_index);
 
           return (
-            <div key={status} className="w-full md:w-[19rem] md:shrink-0">
+            <div key={status} className="min-w-0">
               <KanbanColumn
                 applications={columnApplications}
                 isDisabled={isUpdating}

@@ -125,7 +125,7 @@ export function Drawer({
             data-testid="drawer-backdrop"
             aria-hidden="true"
             className={cn(
-              "fixed inset-0 z-40 bg-ink/30 backdrop-blur-[1px]",
+              "fixed inset-0 z-40 bg-black/65 backdrop-blur-sm",
               backdropClassName,
             )}
             initial={{ opacity: 0 }}

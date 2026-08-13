@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Drawer } from "../../atoms/Drawer/Drawer";
+import { StatefulButton } from "../../atoms/StatefulButton/StatefulButton";
 import { JobApplicationFormFields } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import type { JobApplicationFormControl } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import {
@@ -214,15 +215,17 @@ export function JobApplicationDetailDrawer({
               >
                 Cancel delete
               </button>
-              <button
+              <StatefulButton
                 ref={confirmDeleteButtonRef}
                 type="button"
                 className={`${buttonClassName} bg-danger text-white hover:bg-danger/90`}
-                disabled={isBusy}
+                state={isDeleting ? "loading" : hasDeleteError ? "error" : "idle"}
+                loadingText="Deleting…"
+                errorText="Try again"
                 onClick={handleDelete}
               >
                 Confirm delete
-              </button>
+              </StatefulButton>
             </div>
           ) : (
             <button
@@ -244,13 +247,15 @@ export function JobApplicationDetailDrawer({
             >
               Cancel
             </button>
-            <button
+            <StatefulButton
               type="submit"
               className={`${buttonClassName} bg-primary text-ink hover:bg-primary-hover`}
-              disabled={isBusy}
+              state={isSaving ? "loading" : hasSaveError ? "error" : "idle"}
+              loadingText="Saving…"
+              errorText="Try again"
             >
               Save changes
-            </button>
+            </StatefulButton>
           </div>
         </div>
       </form>

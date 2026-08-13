@@ -1,0 +1,56 @@
+<style>
+  .final-system { background:#fff; color:#1e1f21; border:1px solid #edeae9; border-radius:18px; padding:24px; }
+  .action-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:18px 0 24px; }
+  .action-card { border:1px solid #edeae9; border-radius:11px; padding:16px; background:#f9f8f8; }
+  .action-card b { display:block; margin-bottom:10px; }
+  .btn { display:inline-flex; justify-content:center; align-items:center; min-height:38px; border-radius:7px; padding:0 15px; font:700 12px/1 Inter,system-ui; border:1px solid transparent; }
+  .primary { background:#ff584a; color:#1e1f21; }
+  .primary-hover { background:#ee4e42; color:#1e1f21; }
+  .secondary { background:#fff; color:#1e1f21; border-color:#d8d5d4; }
+  .danger { background:#fff; color:#c92f54; border-color:#c92f54; }
+  .note { color:#6d6e6f; font:11px/1.55 Inter,system-ui; margin-top:9px; }
+  .sample { display:grid; grid-template-columns:215px 1fr; min-height:320px; overflow:hidden; border:1px solid #edeae9; border-radius:14px; }
+  .side { padding:19px 14px; background:#f9f8f8; border-right:1px solid #edeae9; display:flex; flex-direction:column; }
+  .brand { font:760 12px/1 Inter,system-ui; letter-spacing:.07em; margin-bottom:17px; }
+  .add { display:flex; align-items:center; justify-content:center; min-height:38px; border-radius:7px; background:#ff584a; color:#1e1f21; font:720 12px/1 Inter,system-ui; margin-bottom:16px; }
+  .nav { padding:8px 9px; border-radius:7px; color:#6d6e6f; font:12px/1 Inter,system-ui; display:flex; justify-content:space-between; }
+  .nav.active { background:#edeae9; color:#1e1f21; font-weight:680; }
+  .nav.soon { opacity:.6; }
+  .workspace { padding:20px; }
+  .workspace h3 { margin:0 0 4px; font:740 20px/1.2 Inter,system-ui; }
+  .workspace > p { color:#6d6e6f; margin:0 0 18px; font:11px/1.4 Inter,system-ui; }
+  .columns { display:flex; gap:11px; overflow:hidden; }
+  .column { flex:0 0 205px; background:#f9f8f8; border-radius:10px; padding:11px; }
+  .head { display:flex; align-items:center; gap:7px; font:680 12px/1 Inter,system-ui; padding:3px 2px 12px; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#6a67ce; }
+  .card { background:#fff; border:1px solid #edeae9; border-radius:8px; padding:13px; }
+  .company { font:700 14px/1.25 Inter,system-ui; margin-bottom:4px; }
+  .position { color:#6d6e6f; font:12px/1.35 Inter,system-ui; }
+  .meta { color:#6d6e6f; font:10px/1.4 Inter,system-ui; margin-top:10px; }
+  .mapping { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
+  .mapping span { border:1px solid #edeae9; border-radius:999px; padding:7px 10px; color:#6d6e6f; font:11px/1 Inter,system-ui; }
+  .approve-wrap { display:flex; justify-content:flex-end; margin-top:18px; }
+  .approve { cursor:pointer; background:#ff584a; color:#1e1f21; border:0; border-radius:8px; padding:11px 16px; font-weight:750; }
+  .approve.selected { box-shadow:0 0 0 3px rgba(69,115,210,.25); }
+  @media(max-width:900px){.action-row{grid-template-columns:repeat(2,1fr)}.sample{grid-template-columns:165px 1fr}}
+</style>
+
+<h2>Primary action updated to #FF584A</h2>
+<p class="subtitle">Coral drives frequent creation and save actions; blue remains the navigational/focus accent.</p>
+
+<div class="final-system">
+  <div class="action-row">
+    <div class="action-card"><b>Primary</b><span class="btn primary">Add application</span><div class="note">#FF584A + #1E1F21 text</div></div>
+    <div class="action-card"><b>Primary hover</b><span class="btn primary-hover">Save changes</span><div class="note">Slightly deeper coral</div></div>
+    <div class="action-card"><b>Secondary</b><span class="btn secondary">Cancel</span><div class="note">Neutral outline</div></div>
+    <div class="action-card"><b>Danger</b><span class="btn danger">Delete</span><div class="note">#C92F54 outline, separated from Save</div></div>
+  </div>
+
+  <div class="sample">
+    <aside class="side"><div class="brand">JOB BUDDY</div><div class="add">＋ Add application</div><div class="nav active">Applications</div><div class="nav soon"><span>Stats</span><span>Soon</span></div><div class="nav soon"><span>Reminders</span><span>Soon</span></div><div class="nav soon"><span>Export</span><span>Soon</span></div></aside>
+    <main class="workspace"><h3>Applications</h3><p>Track every opportunity from saved to final decision.</p><div class="columns"><section class="column"><div class="head"><i class="dot"></i>Saved (3)</div><div class="card"><div class="company">Northstar</div><div class="position">Product Designer</div><div class="meta">Aug 11 · ↗ Link</div></div></section><section class="column"><div class="head"><i class="dot" style="background:#ffb900"></i>Interview (2)</div><div class="card"><div class="company">Luma</div><div class="position">Design Engineer</div><div class="meta">Aug 14</div></div></section></div></main>
+  </div>
+
+  <div class="mapping"><span>Primary action · #FF584A</span><span>Focus / links · #4573D2</span><span>Danger · #C92F54</span><span>Success · #0D7F56</span></div>
+  <div class="approve-wrap"><button class="approve" data-choice="approve-coral-system" onclick="toggleSelect(this)">Approve coral action system</button></div>
+</div>

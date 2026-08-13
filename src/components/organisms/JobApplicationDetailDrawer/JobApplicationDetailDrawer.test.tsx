@@ -376,7 +376,11 @@ describe("JobApplicationDetailDrawer", () => {
     expect(screen.getByRole("button", { name: "Close drawer" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saving…" })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
     expect(props.onOpenChange).not.toHaveBeenCalled();
   });
 });

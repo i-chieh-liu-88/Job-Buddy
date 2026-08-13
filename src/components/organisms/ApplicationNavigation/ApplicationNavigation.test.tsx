@@ -146,7 +146,7 @@ describe("ApplicationNavigation", () => {
     expect(screen.getByRole("button", { name: "Account menu" })).toBeVisible();
   });
 
-  it("reports each exact Add application opener and honors the disabled state", async () => {
+  it("reports each exact Add opener and honors the disabled state", async () => {
     const onAddApplication = vi.fn();
     const user = userEvent.setup();
     const navigationProps = {

@@ -9,7 +9,8 @@ import { cn } from "../../../lib/cn";
 export type JobApplicationFormControl =
   | HTMLInputElement
   | HTMLSelectElement
-  | HTMLTextAreaElement;
+  | HTMLTextAreaElement
+  | HTMLButtonElement;
 
 type JobApplicationFormFieldsProps = {
   disabled: boolean;
@@ -17,6 +18,7 @@ type JobApplicationFormFieldsProps = {
   idPrefix: string;
   layout?: "responsive" | "single-column";
   onChange: (field: JobApplicationFormField, value: string) => void;
+  onOpenDatePicker?: () => void;
   setFieldRef: (
     field: JobApplicationFormField,
     element: JobApplicationFormControl | null,
@@ -25,7 +27,7 @@ type JobApplicationFormFieldsProps = {
 };
 
 const controlClassName =
-  "mt-1 w-full rounded-md border bg-canvas px-3 text-sm text-ink outline-none transition-[border-color,box-shadow,background-color] placeholder:text-muted/70 focus:border-focus focus:ring-2 focus:ring-focus/20 disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted motion-reduce:transition-none";
+  "mt-1 w-full rounded-lg border bg-[#111318] px-3 text-sm text-ink outline-none transition-[border-color,box-shadow,background-color] placeholder:text-muted/70 focus:border-focus focus:ring-2 focus:ring-focus/20 disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted motion-reduce:transition-none";
 
 function statusLabel(status: string) {
   return status.charAt(0).toUpperCase() + status.slice(1);
@@ -37,6 +39,7 @@ export function JobApplicationFormFields({
   idPrefix,
   layout = "responsive",
   onChange,
+  onOpenDatePicker,
   setFieldRef,
   values,
 }: JobApplicationFormFieldsProps) {
@@ -179,17 +182,33 @@ export function JobApplicationFormFields({
         >
           Applied date
         </label>
-        <input
-          ref={(element) => setFieldRef("applied_date", element)}
-          className={fieldClassName("applied_date")}
-          disabled={disabled}
-          id={controlId("applied_date")}
-          name="applied_date"
-          type="date"
-          value={values.applied_date}
-          onChange={(event) => onChange("applied_date", event.target.value)}
-          {...errorProps("applied_date")}
-        />
+        {onOpenDatePicker ? (
+          <button
+            ref={(element) => setFieldRef("applied_date", element)}
+            type="button"
+            className={`${fieldClassName("applied_date")} flex items-center justify-between text-left ${values.applied_date ? "" : "text-muted"}`}
+            disabled={disabled}
+            id={controlId("applied_date")}
+            aria-label="Applied date"
+            onClick={onOpenDatePicker}
+            {...errorProps("applied_date")}
+          >
+            <span>{values.applied_date || "Select date"}</span>
+            <span aria-hidden="true">◫</span>
+          </button>
+        ) : (
+          <input
+            ref={(element) => setFieldRef("applied_date", element)}
+            className={fieldClassName("applied_date")}
+            disabled={disabled}
+            id={controlId("applied_date")}
+            name="applied_date"
+            type="date"
+            value={values.applied_date}
+            onChange={(event) => onChange("applied_date", event.target.value)}
+            {...errorProps("applied_date")}
+          />
+        )}
         {fieldError("applied_date")}
       </div>
 

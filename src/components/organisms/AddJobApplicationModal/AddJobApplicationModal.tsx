@@ -1,5 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import {
+  CenterMorphModal,
+  CenterMorphModalContent,
+} from "../../atoms/CenterMorphModal/CenterMorphModal";
+import { DateWheelPicker } from "../../molecules/DateWheelPicker/DateWheelPicker";
+import { StatefulButton } from "../../atoms/StatefulButton/StatefulButton";
 import { JobApplicationFormFields } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import type { JobApplicationFormControl } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import {
@@ -40,10 +46,13 @@ export function AddJobApplicationModal({
   onClose,
   onCreate,
 }: AddJobApplicationModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const fieldRefs = useRef<
     Partial<Record<JobApplicationFormField, JobApplicationFormControl>>
   >({});
+  const companyFieldRef = useRef<HTMLElement | null>(null);
+  const formId = useId();
+  const [isOpen, setIsOpen] = useState(true);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [values, setValues] = useState<JobApplicationFormValues>(
     emptyJobApplicationFormValues,
   );
@@ -51,12 +60,14 @@ export function AddJobApplicationModal({
     useState<JobApplicationFormErrors>({});
 
   useEffect(() => {
-    dialogRef.current?.showModal();
-    fieldRefs.current.company?.focus();
-  }, []);
+    if (isOpen) return;
+
+    const closeTimer = window.setTimeout(onClose, 460);
+    return () => window.clearTimeout(closeTimer);
+  }, [isOpen, onClose]);
 
   function closeDialog() {
-    dialogRef.current?.close();
+    if (!isCreating) setIsOpen(false);
   }
 
   function handleFieldChange(field: JobApplicationFormField, value: string) {
@@ -78,7 +89,9 @@ export function AddJobApplicationModal({
       const errors = issuesToFieldErrors(result.error.issues);
       setFieldErrors(errors);
       const firstInvalidField = fieldOrder.find((field) => errors[field]);
-      if (firstInvalidField) fieldRefs.current[firstInvalidField]?.focus();
+      if (firstInvalidField) {
+        queueMicrotask(() => fieldRefs.current[firstInvalidField]?.focus());
+      }
       return;
     }
 
@@ -91,17 +104,21 @@ export function AddJobApplicationModal({
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      aria-describedby="add-application-description"
-      aria-labelledby="add-application-title"
-      className="m-auto max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-2xl overflow-hidden rounded-xl border border-line bg-canvas p-0 text-ink shadow-[0_24px_64px_rgba(30,31,33,0.18)] backdrop:bg-ink/30 backdrop:backdrop-blur-[1px] open:flex open:flex-col"
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!isCreating) closeDialog();
+    <CenterMorphModal
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isCreating) setIsOpen(false);
       }}
-      onClose={onClose}
     >
+      <CenterMorphModalContent
+        ariaDescribedBy="add-application-description"
+        ariaLabel="Add application"
+        backdropClassName="bg-black/65 backdrop-blur-sm"
+        className="max-h-[calc(100dvh-1rem)] max-w-2xl rounded-xl border-line bg-canvas text-ink"
+        dismissible={!isCreating}
+        initialFocusRef={companyFieldRef}
+        showCloseButton={false}
+      >
       <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4 md:px-6 md:py-5">
         <div>
           <h2
@@ -137,11 +154,13 @@ export function AddJobApplicationModal({
           <JobApplicationFormFields
             disabled={isCreating}
             errors={fieldErrors}
-            idPrefix="add-application"
+            idPrefix={`add-application-${formId}`}
             values={values}
             onChange={handleFieldChange}
+            onOpenDatePicker={() => setIsDatePickerOpen(true)}
             setFieldRef={(field, element) => {
               if (element) fieldRefs.current[field] = element;
+              if (field === "company") companyFieldRef.current = element;
             }}
           />
 
@@ -165,15 +184,28 @@ export function AddJobApplicationModal({
           >
             Cancel
           </button>
-          <button
+          <StatefulButton
             type="submit"
             className={`${buttonClassName} bg-primary text-ink hover:bg-primary-hover`}
-            disabled={isCreating}
+            state={isCreating ? "loading" : hasCreateError ? "error" : "idle"}
+            loadingText="Adding…"
+            errorText="Try again"
           >
             Add application
-          </button>
+          </StatefulButton>
         </div>
       </form>
-    </dialog>
+      {isDatePickerOpen ? (
+        <DateWheelPicker
+          value={values.applied_date}
+          onCancel={() => setIsDatePickerOpen(false)}
+          onConfirm={(value) => {
+            handleFieldChange("applied_date", value);
+            setIsDatePickerOpen(false);
+          }}
+        />
+      ) : null}
+      </CenterMorphModalContent>
+    </CenterMorphModal>
   );
 }

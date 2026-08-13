@@ -1,0 +1,74 @@
+<style>
+  .system { background:#fff; color:#1e1f21; border:1px solid #edeae9; border-radius:18px; padding:24px; }
+  .palette-section { margin-bottom:22px; }
+  .palette-label { color:#6d6e6f; font:700 10px/1 Inter,system-ui; letter-spacing:.11em; margin-bottom:10px; }
+  .swatches { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; }
+  .swatch { overflow:hidden; border:1px solid #edeae9; border-radius:9px; background:#fff; }
+  .color { height:45px; }
+  .copy { padding:7px 8px; color:#6d6e6f; font:10px/1.45 Inter,system-ui; }
+  .copy b { display:block; color:#1e1f21; }
+  .sample { display:grid; grid-template-columns:46px 205px 1fr; min-height:360px; overflow:hidden; border:1px solid #edeae9; border-radius:14px; background:#fff; }
+  .rail { background:#1e1f21; color:#fff; padding:14px 9px; display:flex; align-items:center; flex-direction:column; gap:13px; }
+  .rail-mark { width:25px; height:25px; border-radius:8px; background:#3be8b0; color:#1e1f21; display:grid; place-items:center; font:800 11px/1 Inter,system-ui; }
+  .rail-icon { width:19px; height:19px; border-radius:6px; border:1px solid #6d6e6f; }
+  .sidebar { background:#f9f8f8; border-right:1px solid #edeae9; padding:18px 13px; display:flex; flex-direction:column; }
+  .brand { font:760 12px/1 Inter,system-ui; letter-spacing:.06em; margin-bottom:17px; }
+  .add { background:#4573d2; color:#fff; padding:9px 10px; border-radius:7px; font:680 12px/1 Inter,system-ui; margin-bottom:16px; }
+  .nav { color:#6d6e6f; padding:8px 9px; border-radius:7px; font:12px/1 Inter,system-ui; margin-bottom:3px; display:flex; justify-content:space-between; }
+  .nav.active { background:#edeae9; color:#1e1f21; font-weight:680; }
+  .nav.soon { opacity:.62; }
+  .stages { border-top:1px solid #edeae9; margin-top:12px; padding-top:10px; }
+  .stage { display:flex; justify-content:space-between; align-items:center; color:#6d6e6f; padding:5px 8px; font:11px/1 Inter,system-ui; }
+  .stage-name { display:flex; align-items:center; gap:6px; }
+  .dot { width:7px; height:7px; border-radius:50%; }
+  .account { margin-top:auto; border-top:1px solid #edeae9; padding:12px 7px 0; color:#6d6e6f; font:11px/1 Inter,system-ui; }
+  .workspace { padding:20px; overflow:hidden; }
+  .top { margin-bottom:18px; }
+  .top h3 { margin:0 0 5px; font:740 21px/1.1 Inter,system-ui; }
+  .top p { margin:0; color:#6d6e6f; font:11px/1.4 Inter,system-ui; }
+  .board { display:flex; gap:12px; }
+  .column { flex:0 0 218px; border:1px solid #f9f8f8; background:#f9f8f8; border-radius:10px; padding:11px; }
+  .column-head { color:#1e1f21; font:680 12px/1 Inter,system-ui; padding:3px 2px 12px; display:flex; align-items:center; gap:7px; }
+  .card { background:#fff; border:1px solid #edeae9; border-radius:8px; padding:13px; margin-bottom:9px; box-shadow:0 1px 2px rgba(30,31,33,.04); }
+  .company { font:700 14px/1.25 Inter,system-ui; margin-bottom:4px; }
+  .position { color:#6d6e6f; font:12px/1.35 Inter,system-ui; }
+  .meta { color:#6d6e6f; font:10px/1.4 Inter,system-ui; margin-top:11px; display:flex; gap:10px; }
+  .empty { border:1px dashed #d8d5d4; border-radius:8px; color:#6d6e6f; text-align:center; padding:22px 8px; font:11px/1.4 Inter,system-ui; }
+  .usage { margin-top:20px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  .usage-card { border:1px solid #edeae9; border-radius:10px; padding:12px; color:#6d6e6f; font:11px/1.5 Inter,system-ui; }
+  .usage-card b { color:#1e1f21; display:block; margin-bottom:3px; }
+  .approval { display:flex; justify-content:flex-end; margin-top:18px; }
+  .approve { cursor:pointer; border:1px solid #4573d2; color:#325fb8; background:#fff; border-radius:8px; padding:10px 15px; font-weight:700; }
+  .approve.selected { background:#4573d2; color:#fff; }
+  @media(max-width:900px){.swatches{grid-template-columns:repeat(3,1fr)}.sample{grid-template-columns:40px 155px 1fr}.column{flex-basis:190px}.usage{grid-template-columns:1fr}}
+</style>
+
+<h2>Revised: Asana light color system</h2>
+<p class="subtitle">The selected A layout, rebuilt with the exact brand, neutral, and accent colors from your references.</p>
+
+<div class="system">
+  <div class="palette-section"><div class="palette-label">BRAND / STATUS COLORS</div><div class="swatches">
+    <div class="swatch"><div class="color" style="background:#3be8b0"></div><div class="copy"><b>Eucalyptus</b>#3BE8B0 · Offer</div></div>
+    <div class="swatch"><div class="color" style="background:#1aafd0"></div><div class="copy"><b>Charged Blue</b>#1AAFD0 · Applied</div></div>
+    <div class="swatch"><div class="color" style="background:#6a67ce"></div><div class="copy"><b>Slate Blue</b>#6A67CE · Saved</div></div>
+    <div class="swatch"><div class="color" style="background:#ffb900"></div><div class="copy"><b>Selective Yellow</b>#FFB900 · Interview</div></div>
+    <div class="swatch"><div class="color" style="background:#fc636b"></div><div class="copy"><b>Pastel Red</b>#FC636B · Rejected dot only</div></div>
+  </div></div>
+
+  <div class="palette-section"><div class="palette-label">NEUTRAL + ACTION COLORS</div><div class="swatches">
+    <div class="swatch"><div class="color" style="background:#1e1f21"></div><div class="copy"><b>Primary</b>#1E1F21</div></div>
+    <div class="swatch"><div class="color" style="background:#6d6e6f"></div><div class="copy"><b>Muted</b>#6D6E6F</div></div>
+    <div class="swatch"><div class="color" style="background:#edeae9"></div><div class="copy"><b>Hover / border</b>#EDEAE9</div></div>
+    <div class="swatch"><div class="color" style="background:#f9f8f8"></div><div class="copy"><b>Surface</b>#F9F8F8</div></div>
+    <div class="swatch"><div class="color" style="background:#4573d2"></div><div class="copy"><b>Primary action</b>#4573D2</div></div>
+  </div></div>
+
+  <div class="sample">
+    <aside class="rail"><div class="rail-mark">JB</div><div class="rail-icon"></div><div class="rail-icon"></div><div class="rail-icon"></div></aside>
+    <aside class="sidebar"><div class="brand">JOB BUDDY</div><div class="add">＋ Add application</div><div class="nav active">Applications</div><div class="nav soon"><span>Stats</span><span>Soon</span></div><div class="nav soon"><span>Reminders</span><span>Soon</span></div><div class="nav soon"><span>Export</span><span>Soon</span></div><div class="stages"><div class="stage"><span class="stage-name"><i class="dot" style="background:#6a67ce"></i>Saved</span><span>3</span></div><div class="stage"><span class="stage-name"><i class="dot" style="background:#1aafd0"></i>Applied</span><span>5</span></div><div class="stage"><span class="stage-name"><i class="dot" style="background:#ffb900"></i>Interview</span><span>2</span></div><div class="stage"><span class="stage-name"><i class="dot" style="background:#3be8b0"></i>Offer</span><span>1</span></div><div class="stage"><span class="stage-name"><i class="dot" style="background:#fc636b"></i>Rejected</span><span>4</span></div></div><div class="account">Ichieh · Account</div></aside>
+    <main class="workspace"><div class="top"><h3>Applications</h3><p>Track every opportunity from saved to final decision.</p></div><div class="board"><section class="column"><div class="column-head"><span class="dot" style="background:#6a67ce"></span>Saved (3)</div><div class="card"><div class="company">Northstar</div><div class="position">Product Designer</div><div class="meta"><span>Aug 11</span><span>↗ Link</span></div></div><div class="card"><div class="company">Acme</div><div class="position">Frontend Engineer</div></div></section><section class="column"><div class="column-head"><span class="dot" style="background:#ffb900"></span>Interview (2)</div><div class="card"><div class="company">Luma</div><div class="position">Design Engineer</div><div class="meta"><span>Aug 14</span><span>↗ Link</span></div></div></section><section class="column"><div class="column-head"><span class="dot" style="background:#3be8b0"></span>Offer (0)</div><div class="empty">No applications yet</div></section></div></main>
+  </div>
+
+  <div class="usage"><div class="usage-card"><b>Accent blue · #4573D2</b>Add, Save, focus rings, active navigation.</div><div class="usage-card"><b>Danger red · #C92F54</b>Validation and Delete only; never a full Rejected column.</div><div class="usage-card"><b>Success green · #0D7F56</b>Offer/success confirmation text where semantic contrast is required.</div></div>
+  <div class="approval"><button class="approve" data-choice="approve-asana-light" onclick="toggleSelect(this)">Approve revised color system</button></div>
+</div>

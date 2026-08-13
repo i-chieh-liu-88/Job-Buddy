@@ -32,7 +32,10 @@ describe("AuthGate", () => {
       </AuthGate>,
     );
 
-    expect(screen.getByRole("status")).toHaveTextContent("Loading Job Buddy…");
+    expect(screen.getByRole("status")).toHaveAccessibleName(
+      "Entering Job Buddy workspace",
+    );
+    expect(screen.getByTestId("dither-loader-grid")).toBeVisible();
     expect(screen.queryByText("Protected board")).not.toBeInTheDocument();
   });
 
@@ -45,8 +48,21 @@ describe("AuthGate", () => {
       </AuthGate>,
     );
 
-    expect(screen.getByRole("heading", { name: "Job Buddy" })).toBeVisible();
+    expect(screen.getByText(/Job Buddy/)).toBeVisible();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+      "font-display",
+    );
+    expect(screen.getByTestId("landing-headline-primary")).toHaveClass(
+      "bg-clip-text",
+    );
+    expect(screen.getByTestId("architecture-wave-background")).toBeVisible();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Organizeevery movewith clarity.",
+    );
     expect(screen.getByText(/track every job opportunity/i)).toBeVisible();
+    expect(screen.getByText("Track every application")).toBeVisible();
+    expect(screen.getByText("Move forward visually")).toBeVisible();
+    expect(screen.getByText("Keep details close")).toBeVisible();
     expect(screen.getByRole("button", { name: "Sign in" })).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Create account" }),
