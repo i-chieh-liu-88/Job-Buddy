@@ -29,7 +29,7 @@ The component renders five adjacent circular balls. During normal motion, only t
 
 The balls use Motion and the project's existing `EASE_IN_OUT` timing token. Animation repeats continuously with a cycle duration of `speed * 1.5` seconds.
 
-When reduced motion is requested, transforms are removed and all five balls use the official calm opacity pulse. The outer element uses `role="status"` and the supplied accessible label. The visual balls are marked `aria-hidden`, and no caption is rendered.
+When reduced motion is requested, transforms are removed and all five balls remain static, matching the supplied official Newton implementation. The outer element uses `role="status"` and the supplied accessible label. The visual balls are marked `aria-hidden`, and no caption is rendered.
 
 ## Integration
 
