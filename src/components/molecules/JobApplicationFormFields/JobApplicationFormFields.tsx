@@ -5,6 +5,7 @@ import type {
 } from "./jobApplicationFormSchema";
 import { jobApplicationStatuses } from "./jobApplicationFormSchema";
 import { cn } from "../../../lib/cn";
+import type { Resume } from "../../../types/database";
 
 export type JobApplicationFormControl =
   | HTMLInputElement
@@ -17,12 +18,15 @@ type JobApplicationFormFieldsProps = {
   errors: JobApplicationFormErrors;
   idPrefix: string;
   layout?: "responsive" | "single-column";
-  onChange: (field: JobApplicationFormField, value: string) => void;
+  onChange: (field: JobApplicationFormField, value: string | null) => void;
   onOpenDatePicker?: () => void;
   setFieldRef: (
     field: JobApplicationFormField,
     element: JobApplicationFormControl | null,
   ) => void;
+  resumes?: Resume[];
+  resumePickerDisabled?: boolean;
+  showResumePicker?: boolean;
   values: JobApplicationFormValues;
 };
 
@@ -40,10 +44,16 @@ export function JobApplicationFormFields({
   layout = "responsive",
   onChange,
   onOpenDatePicker,
+  resumes = [],
+  resumePickerDisabled = false,
   setFieldRef,
+  showResumePicker = false,
   values,
 }: JobApplicationFormFieldsProps) {
   const usesResponsiveColumns = layout === "responsive";
+  const hasSelectedResume = values.resume_id
+    ? resumes.some((resume) => resume.id === values.resume_id)
+    : true;
 
   function controlId(field: JobApplicationFormField) {
     return `${idPrefix}-${field.replace("_", "-")}`;
@@ -232,25 +242,40 @@ export function JobApplicationFormFields({
         {fieldError("notes")}
       </div>
 
-      <div className={cn(usesResponsiveColumns && "md:col-span-2")}>
-        <label
-          className="block text-sm font-medium text-ink"
-          htmlFor={controlId("resume_version")}
-        >
-          Resume version
-        </label>
-        <input
-          ref={(element) => setFieldRef("resume_version", element)}
-          className={fieldClassName("resume_version")}
-          disabled={disabled}
-          id={controlId("resume_version")}
-          name="resume_version"
-          value={values.resume_version}
-          onChange={(event) => onChange("resume_version", event.target.value)}
-          {...errorProps("resume_version")}
-        />
-        {fieldError("resume_version")}
-      </div>
+      {showResumePicker ? (
+        <div className={cn(usesResponsiveColumns && "md:col-span-2")}>
+          <label
+            className="block text-sm font-medium text-ink"
+            htmlFor={controlId("resume_id")}
+          >
+            Resume
+          </label>
+          <select
+            ref={(element) => setFieldRef("resume_id", element)}
+            className={fieldClassName("resume_id")}
+            disabled={disabled || resumePickerDisabled}
+            id={controlId("resume_id")}
+            name="resume_id"
+            value={values.resume_id ?? ""}
+            onChange={(event) =>
+              onChange("resume_id", event.target.value || null)
+            }
+            {...errorProps("resume_id")}
+          >
+            <option value="">No resume linked</option>
+            {values.resume_id && !hasSelectedResume ? (
+              <option value={values.resume_id}>Current linked resume</option>
+            ) : null}
+            {resumes.map((resume) => (
+              <option key={resume.id} value={resume.id}>
+                {resume.label}
+              </option>
+            ))}
+          </select>
+          {fieldError("resume_id")}
+        </div>
+      ) : null}
+
     </div>
   );
 }

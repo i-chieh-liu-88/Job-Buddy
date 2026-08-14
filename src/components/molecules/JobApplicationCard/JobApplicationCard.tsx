@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { CSSProperties } from "react";
 import { JOB_APPLICATION_STATUS_PRESENTATION } from "../../../lib/jobApplicationStatusPresentation";
 import type { JobApplication } from "../../../types/database";
+import { DragIndicatorIcon } from "../../atoms/DragIndicatorIcon/DragIndicatorIcon";
 import { TiltCard } from "../../atoms/TiltCard/TiltCard";
 
 export type SelectJobApplication = (
@@ -148,7 +149,7 @@ export function JobApplicationCard({
           {...attributes}
           {...listeners}
         >
-          <span aria-hidden="true">↕</span>
+          <DragIndicatorIcon className="mx-auto size-[18px]" />
         </button>
       </TiltCard>
     </article>

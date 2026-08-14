@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Drawer } from "../../atoms/Drawer/Drawer";
 import { StatefulButton } from "../../atoms/StatefulButton/StatefulButton";
+import { InterviewRounds } from "../InterviewRounds/InterviewRounds";
 import { JobApplicationFormFields } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import type { JobApplicationFormControl } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import {
@@ -15,19 +16,23 @@ import type {
   JobApplicationFormValues,
 } from "../../molecules/JobApplicationFormFields/jobApplicationFormSchema";
 import type { UpdateJobApplicationInput } from "../../../hooks/useJobApplications";
-import type { JobApplication } from "../../../types/database";
+import { useOpenResume } from "../../../hooks/useResumes";
+import type { JobApplication, Resume } from "../../../types/database";
 
 type JobApplicationDetailDrawerProps = {
   application: JobApplication;
   hasDeleteError: boolean;
   hasSaveError: boolean;
+  hasResumesError: boolean;
   isDeleting: boolean;
   isSaving: boolean;
+  isResumesLoading: boolean;
   onDelete: (id: string) => Promise<unknown>;
   onExitComplete: () => void;
   onOpenChange: (open: boolean) => void;
   onSave: (input: UpdateJobApplicationInput) => Promise<unknown>;
   open: boolean;
+  resumes: Resume[];
 };
 
 const fieldOrder: JobApplicationFormField[] = [
@@ -37,7 +42,6 @@ const fieldOrder: JobApplicationFormField[] = [
   "status",
   "applied_date",
   "notes",
-  "resume_version",
 ];
 
 const buttonClassName =
@@ -47,13 +51,16 @@ export function JobApplicationDetailDrawer({
   application,
   hasDeleteError,
   hasSaveError,
+  hasResumesError,
   isDeleting,
   isSaving,
+  isResumesLoading,
   onDelete,
   onExitComplete,
   onOpenChange,
   onSave,
   open,
+  resumes,
 }: JobApplicationDetailDrawerProps) {
   const companyFocusRef = useRef<HTMLElement | null>(null);
   const fieldRefs = useRef<
@@ -69,7 +76,11 @@ export function JobApplicationDetailDrawer({
     useState<JobApplicationFormErrors>({});
   const [isDeleteConfirmationVisible, setIsDeleteConfirmationVisible] =
     useState(false);
+  const openResume = useOpenResume();
   const isBusy = isSaving || isDeleting;
+  const linkedResume = values.resume_id
+    ? resumes.find((resume) => resume.id === values.resume_id)
+    : undefined;
 
   useEffect(() => {
     if (isDeleteConfirmationVisible) {
@@ -87,7 +98,10 @@ export function JobApplicationDetailDrawer({
     if (!isBusy) onOpenChange(false);
   }
 
-  function handleFieldChange(field: JobApplicationFormField, value: string) {
+  function handleFieldChange(
+    field: JobApplicationFormField,
+    value: string | null,
+  ) {
     setValues(
       (currentValues) =>
         ({ ...currentValues, [field]: value }) as JobApplicationFormValues,
@@ -125,6 +139,11 @@ export function JobApplicationDetailDrawer({
     } catch {
       // The parent rerenders the error state after its mutation rejects.
     }
+  }
+
+  function handleOpenResume() {
+    if (!linkedResume) return;
+    void openResume.mutateAsync(linkedResume).catch(() => {});
   }
 
   return (
@@ -173,6 +192,9 @@ export function JobApplicationDetailDrawer({
             errors={fieldErrors}
             idPrefix="application"
             layout="single-column"
+            resumePickerDisabled={isResumesLoading || hasResumesError}
+            resumes={resumes}
+            showResumePicker
             values={values}
             onChange={handleFieldChange}
             setFieldRef={(field, element) => {
@@ -180,6 +202,32 @@ export function JobApplicationDetailDrawer({
               if (field === "company") companyFocusRef.current = element;
             }}
           />
+          {linkedResume ? (
+            <div className="mt-4 flex items-center gap-3">
+              <StatefulButton
+                type="button"
+                className={`${buttonClassName} border border-line bg-canvas text-ink hover:bg-hover`}
+                errorText="Try again"
+                loadingText="Opening…"
+                state={openResume.isPending ? "loading" : openResume.isError ? "error" : "idle"}
+                onClick={handleOpenResume}
+              >
+                Open resume
+              </StatefulButton>
+              <span className="text-sm text-muted">{linkedResume.label}</span>
+            </div>
+          ) : null}
+          {openResume.isError ? (
+            <p className="mt-4 text-sm text-danger" role="alert">
+              The resume could not be opened. Please try again.
+            </p>
+          ) : null}
+          <InterviewRounds jobApplicationId={application.id} />
+          {hasResumesError ? (
+            <p className="mt-4 text-sm text-danger" role="alert">
+              Could not load resumes. The existing resume link will be preserved.
+            </p>
+          ) : null}
           {hasSaveError ? (
             <p className="mt-4 text-sm text-danger" role="alert">
               The application could not be saved. Please try again.

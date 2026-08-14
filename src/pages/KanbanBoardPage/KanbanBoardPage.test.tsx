@@ -7,7 +7,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
+import { StrictMode, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobApplication } from "../../types/database";
 import { KanbanBoardPage } from "./KanbanBoardPage";
@@ -22,7 +22,9 @@ const {
   useCreateJobApplicationMock,
   useDeleteJobApplicationMock,
   useJobApplicationsMock,
+  useResumesMock,
   useUpdateJobApplicationMock,
+  search,
 } = vi.hoisted(() => ({
   createMutateAsync: vi.fn(),
   createReset: vi.fn(),
@@ -33,7 +35,9 @@ const {
   useCreateJobApplicationMock: vi.fn(),
   useDeleteJobApplicationMock: vi.fn(),
   useJobApplicationsMock: vi.fn(),
+  useResumesMock: vi.fn(),
   useUpdateJobApplicationMock: vi.fn(),
+  search: {} as { applicationId?: string },
 }));
 
 const applications: JobApplication[] = [
@@ -46,7 +50,7 @@ const applications: JobApplication[] = [
     status: "saved",
     applied_date: null,
     notes: null,
-    resume_version: null,
+    resume_id: null,
     order_index: 1_000,
     created_at: "2026-08-11T00:00:00.000Z",
     updated_at: "2026-08-11T00:00:00.000Z",
@@ -60,7 +64,7 @@ const applications: JobApplication[] = [
     status: "interview",
     applied_date: null,
     notes: null,
-    resume_version: null,
+    resume_id: null,
     order_index: 2_000,
     created_at: "2026-08-11T00:00:00.000Z",
     updated_at: "2026-08-11T00:00:00.000Z",
@@ -82,6 +86,10 @@ function completeDrawerExit() {
 
 vi.mock("@clerk/clerk-react", () => ({
   UserButton: () => <button type="button" aria-label="Account menu" />,
+}));
+
+vi.mock("@tanstack/react-router", () => ({
+  useSearch: () => search,
 }));
 
 vi.mock("../../components/atoms/Drawer/Drawer", async () => {
@@ -138,6 +146,10 @@ vi.mock("../../components/atoms/Drawer/Drawer", async () => {
   return { Drawer };
 });
 
+vi.mock("../../components/organisms/InterviewRounds/InterviewRounds", () => ({
+  InterviewRounds: () => null,
+}));
+
 vi.mock("../../hooks/useJobApplications", () => ({
   useCreateJobApplication: useCreateJobApplicationMock,
   useDeleteJobApplication: useDeleteJobApplicationMock,
@@ -148,6 +160,15 @@ vi.mock("../../hooks/useJobApplications", () => ({
     mutate: vi.fn(),
   }),
   useUpdateJobApplication: useUpdateJobApplicationMock,
+}));
+
+vi.mock("../../hooks/useResumes", () => ({
+  useOpenResume: () => ({
+    isError: false,
+    isPending: false,
+    mutateAsync: vi.fn(),
+  }),
+  useResumes: useResumesMock,
 }));
 
 describe("KanbanBoardPage", () => {
@@ -171,10 +192,16 @@ describe("KanbanBoardPage", () => {
     updateMutateAsync.mockReset();
     updateMutateAsync.mockResolvedValue(undefined);
     updateReset.mockReset();
+    search.applicationId = undefined;
 
     useJobApplicationsMock.mockReturnValue({
       data: applications,
       error: null,
+      isError: false,
+      isPending: false,
+    });
+    useResumesMock.mockReturnValue({
+      data: [],
       isError: false,
       isPending: false,
     });
@@ -288,6 +315,30 @@ describe("KanbanBoardPage", () => {
     expect(screen.getByRole("button", { name: "Account menu" })).toBeVisible();
   });
 
+  it("opens Add application from the empty Saved state and restores its focus", async () => {
+    const user = userEvent.setup();
+    useJobApplicationsMock.mockReturnValue({
+      data: applications.filter(({ status }) => status !== "saved"),
+      error: null,
+      isError: false,
+      isPending: false,
+    });
+    render(<KanbanBoardPage />);
+
+    const savedColumn = screen.getByRole("region", { name: "Saved (0)" });
+    const emptyStateButton = within(savedColumn).getByRole("button", {
+      name: "Add application",
+    });
+
+    await user.click(emptyStateButton);
+
+    expect(screen.getByRole("dialog", { name: "Add application" })).toBeVisible();
+    expect(screen.getByLabelText("Status")).toHaveValue("saved");
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(emptyStateButton).toHaveFocus());
+  });
+
   it("appends a new application after cards in the selected status", async () => {
     const user = userEvent.setup();
     render(<KanbanBoardPage />);
@@ -312,7 +363,7 @@ describe("KanbanBoardPage", () => {
         status: "saved",
         applied_date: null,
         notes: null,
-        resume_version: null,
+        resume_id: null,
         order_index: 2_000,
       });
     });
@@ -417,7 +468,7 @@ describe("KanbanBoardPage", () => {
         status: "interview",
         applied_date: null,
         notes: null,
-        resume_version: null,
+        resume_id: null,
         order_index: 3_000,
       });
     });
@@ -596,6 +647,27 @@ describe("KanbanBoardPage", () => {
       screen.getByRole("heading", { name: "Applications" }),
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Account menu" })).toBeVisible();
+  });
+
+  it("opens the requested application from the calendar deep link", async () => {
+    search.applicationId = "application-2";
+
+    render(<KanbanBoardPage />);
+
+    expect(await screen.findByRole("dialog", { name: "Edit Product Engineer" })).toBeVisible();
+    expect(screen.getByLabelText("Company")).toHaveValue("Globex");
+  });
+
+  it("opens the requested application after Strict Mode replays its effects", async () => {
+    search.applicationId = "application-2";
+
+    render(
+      <StrictMode>
+        <KanbanBoardPage />
+      </StrictMode>,
+    );
+
+    expect(await screen.findByRole("dialog", { name: "Edit Product Engineer" })).toBeVisible();
   });
 
   it("shows allow-listed query error details during development", () => {

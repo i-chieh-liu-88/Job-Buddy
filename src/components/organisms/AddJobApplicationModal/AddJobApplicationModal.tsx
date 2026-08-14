@@ -34,7 +34,6 @@ const fieldOrder: JobApplicationFormField[] = [
   "status",
   "applied_date",
   "notes",
-  "resume_version",
 ];
 
 const buttonClassName =
@@ -70,7 +69,10 @@ export function AddJobApplicationModal({
     if (!isCreating) setIsOpen(false);
   }
 
-  function handleFieldChange(field: JobApplicationFormField, value: string) {
+  function handleFieldChange(
+    field: JobApplicationFormField,
+    value: string | null,
+  ) {
     setValues(
       (currentValues) =>
         ({ ...currentValues, [field]: value }) as JobApplicationFormValues,

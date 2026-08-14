@@ -16,7 +16,6 @@ const formFieldNames = [
   "status",
   "applied_date",
   "notes",
-  "resume_version",
 ] as const;
 
 function isValidUrl(value: string) {
@@ -65,10 +64,8 @@ export const jobApplicationFormSchema = z.object({
   notes: z
     .string()
     .transform((value) => (value.trim() === "" ? null : value)),
-  resume_version: z
-    .string()
-    .transform((value) => value.trim())
-    .transform((value) => (value === "" ? null : value)),
+  // Keep an existing link intact until the resume picker is introduced.
+  resume_id: z.string().uuid().nullable().default(null),
 });
 
 export type JobApplicationFormValues = z.input<
@@ -89,7 +86,7 @@ export const emptyJobApplicationFormValues: JobApplicationFormValues = {
   status: "saved",
   applied_date: "",
   notes: "",
-  resume_version: "",
+  resume_id: null,
 };
 
 export function jobApplicationToFormValues(
@@ -102,7 +99,7 @@ export function jobApplicationToFormValues(
     status: application.status,
     applied_date: application.applied_date ?? "",
     notes: application.notes ?? "",
-    resume_version: application.resume_version ?? "",
+    resume_id: application.resume_id,
   };
 }
 
@@ -120,7 +117,7 @@ export function issuesToFieldErrors(
     const field = issue.path[0];
     if (
       typeof field === "string" &&
-      formFieldNames.includes(field as JobApplicationFormField) &&
+      formFieldNames.includes(field as (typeof formFieldNames)[number]) &&
       errors[field as JobApplicationFormField] === undefined
     ) {
       errors[field as JobApplicationFormField] = issue.message;

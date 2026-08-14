@@ -7,10 +7,29 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UpdateJobApplicationInput } from "../../../hooks/useJobApplications";
 import type { JobApplication } from "../../../types/database";
+import type { Resume } from "../../../types/database";
 import { JobApplicationDetailDrawer } from "./JobApplicationDetailDrawer";
+
+const { openResumeMutateAsync, useOpenResumeMock } = vi.hoisted(() => ({
+  openResumeMutateAsync: vi.fn(),
+  useOpenResumeMock: vi.fn(),
+}));
+
+vi.mock("../../../hooks/useResumes", () => ({
+  useOpenResume: useOpenResumeMock,
+}));
+
+vi.mock("../InterviewRounds/InterviewRounds", () => ({
+  InterviewRounds: ({ jobApplicationId }: { jobApplicationId: string }) => (
+    <section aria-label="Interview rounds">
+      <button type="button">Add interview round</button>
+      <span>{jobApplicationId}</span>
+    </section>
+  ),
+}));
 
 const application: JobApplication = {
   id: "application-1",
@@ -21,11 +40,32 @@ const application: JobApplication = {
   status: "interview",
   applied_date: "2026-08-01",
   notes: "Bring portfolio",
-  resume_version: "v3",
+  resume_id: "11111111-1111-4111-8111-111111111111",
   order_index: 1_000,
   created_at: "2026-08-11T00:00:00.000Z",
   updated_at: "2026-08-11T00:00:00.000Z",
 };
+
+const resumes: Resume[] = [
+  {
+    id: "11111111-1111-4111-8111-111111111111",
+    user_id: "user-1",
+    label: "Frontend v2",
+    file_path: "user-1/resume-1/frontend-v2.pdf",
+    file_type: "application/pdf",
+    file_size: 1_024,
+    uploaded_at: "2026-08-13T00:00:00.000Z",
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222222",
+    user_id: "user-1",
+    label: "General v1",
+    file_path: "user-1/resume-2/general-v1.pdf",
+    file_type: "application/pdf",
+    file_size: 2_048,
+    uploaded_at: "2026-08-12T00:00:00.000Z",
+  },
+];
 
 type DrawerProps = ComponentProps<typeof JobApplicationDetailDrawer>;
 
@@ -34,13 +74,16 @@ function renderDrawer(overrides: Partial<DrawerProps> = {}) {
     application,
     hasDeleteError: false,
     hasSaveError: false,
+    hasResumesError: false,
     isDeleting: false,
+    isResumesLoading: false,
     isSaving: false,
     onDelete: vi.fn().mockResolvedValue(undefined),
     onExitComplete: vi.fn(),
     onOpenChange: vi.fn(),
     onSave: vi.fn().mockResolvedValue(undefined),
     open: true,
+    resumes,
     ...overrides,
   };
   const rendered = render(
@@ -53,6 +96,16 @@ function renderDrawer(overrides: Partial<DrawerProps> = {}) {
 }
 
 describe("JobApplicationDetailDrawer", () => {
+  beforeEach(() => {
+    openResumeMutateAsync.mockReset();
+    openResumeMutateAsync.mockResolvedValue(undefined);
+    useOpenResumeMock.mockReturnValue({
+      isError: false,
+      isPending: false,
+      mutateAsync: openResumeMutateAsync,
+    });
+  });
+
   it("renders a right-side single-column detail drawer", () => {
     renderDrawer();
     const drawer = screen.getByRole("dialog", {
@@ -102,7 +155,10 @@ describe("JobApplicationDetailDrawer", () => {
     expect(screen.getByLabelText("Status")).toHaveValue("interview");
     expect(screen.getByLabelText("Applied date")).toHaveValue("2026-08-01");
     expect(screen.getByLabelText("Notes")).toHaveValue("Bring portfolio");
-    expect(screen.getByLabelText("Resume version")).toHaveValue("v3");
+    expect(screen.getByLabelText("Resume")).toHaveValue(
+      "11111111-1111-4111-8111-111111111111",
+    );
+    expect(screen.queryByLabelText("Resume version")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Company")).toHaveFocus();
 
     await user.click(screen.getByRole("button", { name: "Cancel" }));
@@ -242,8 +298,6 @@ describe("JobApplicationDetailDrawer", () => {
     await user.clear(screen.getByLabelText("Applied date"));
     await user.clear(screen.getByLabelText("Notes"));
     await user.type(screen.getByLabelText("Notes"), "  Keep spacing  ");
-    await user.clear(screen.getByLabelText("Resume version"));
-    await user.type(screen.getByLabelText("Resume version"), "  v4  ");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
@@ -255,10 +309,103 @@ describe("JobApplicationDetailDrawer", () => {
         status: "offer",
         applied_date: null,
         notes: "  Keep spacing  ",
-        resume_version: "v4",
+        resume_id: "11111111-1111-4111-8111-111111111111",
       });
     });
     expect(props.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("preserves an unsaved application draft while the interview section is used", async () => {
+    const user = userEvent.setup();
+    const { props } = renderDrawer();
+
+    await user.clear(screen.getByLabelText("Company"));
+    await user.type(screen.getByLabelText("Company"), "Unsaved Acme");
+    await user.click(screen.getByRole("button", { name: "Add interview round" }));
+
+    expect(screen.getByLabelText("Company")).toHaveValue("Unsaved Acme");
+    expect(props.onSave).not.toHaveBeenCalled();
+  });
+
+  it("opens the currently linked resume without changing the application", async () => {
+    const user = userEvent.setup();
+    const { props } = renderDrawer();
+
+    await user.click(screen.getByRole("button", { name: "Open resume" }));
+
+    await waitFor(() => {
+      expect(openResumeMutateAsync).toHaveBeenCalledWith(resumes[0]);
+    });
+    expect(props.onSave).not.toHaveBeenCalled();
+    expect(props.onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("hides the resume action when the application has no linked resume", () => {
+    renderDrawer({ application: { ...application, resume_id: null } });
+
+    expect(
+      screen.queryByRole("button", { name: "Open resume" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the drawer open and shows a retryable error when opening fails", async () => {
+    const user = userEvent.setup();
+    openResumeMutateAsync.mockRejectedValue(new Error("signed URL failed"));
+    const { props, rerender } = renderDrawer();
+
+    await user.click(screen.getByRole("button", { name: "Open resume" }));
+    await waitFor(() => expect(openResumeMutateAsync).toHaveBeenCalledOnce());
+
+    useOpenResumeMock.mockReturnValue({
+      isError: true,
+      isPending: false,
+      mutateAsync: openResumeMutateAsync,
+    });
+    rerender(<JobApplicationDetailDrawer {...props} />);
+
+    expect(
+      screen.getByText("The resume could not be opened. Please try again."),
+    ).toBeVisible();
+    expect(screen.getByRole("dialog")).toBeVisible();
+  });
+
+  it("replaces and unlinks the selected resume through the save payload", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const { rerender } = renderDrawer({ onSave });
+
+    await user.selectOptions(screen.getByLabelText("Resume"), resumes[1].id);
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({ resume_id: resumes[1].id }),
+      ),
+    );
+
+    rerender(
+      <JobApplicationDetailDrawer
+        application={{ ...application, resume_id: resumes[1].id }}
+        hasDeleteError={false}
+        hasResumesError={false}
+        hasSaveError={false}
+        isDeleting={false}
+        isResumesLoading={false}
+        isSaving={false}
+        onDelete={vi.fn().mockResolvedValue(undefined)}
+        onExitComplete={vi.fn()}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+        open
+        resumes={resumes}
+      />,
+    );
+    await user.selectOptions(screen.getByLabelText("Resume"), "");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenLastCalledWith(
+        expect.objectContaining({ resume_id: null }),
+      ),
+    );
   });
 
   it("keeps the edited draft open after a rejected save", async () => {
@@ -275,14 +422,17 @@ describe("JobApplicationDetailDrawer", () => {
       <JobApplicationDetailDrawer
         application={application}
         hasDeleteError={false}
+        hasResumesError={false}
         hasSaveError
         isDeleting={false}
+        isResumesLoading={false}
         isSaving={false}
         onDelete={vi.fn().mockResolvedValue(undefined)}
         onExitComplete={props.onExitComplete}
         onOpenChange={props.onOpenChange}
         onSave={onSave}
         open
+        resumes={resumes}
       />,
     );
 
@@ -349,14 +499,17 @@ describe("JobApplicationDetailDrawer", () => {
       <JobApplicationDetailDrawer
         application={application}
         hasDeleteError
+        hasResumesError={false}
         hasSaveError={false}
         isDeleting={false}
+        isResumesLoading={false}
         isSaving={false}
         onDelete={onDelete}
         onExitComplete={props.onExitComplete}
         onOpenChange={props.onOpenChange}
         onSave={vi.fn().mockResolvedValue(undefined)}
         open
+        resumes={resumes}
       />,
     );
 

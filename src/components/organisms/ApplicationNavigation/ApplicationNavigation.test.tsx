@@ -146,6 +146,23 @@ describe("ApplicationNavigation", () => {
     expect(screen.getByRole("button", { name: "Account menu" })).toBeVisible();
   });
 
+  it("makes Calendar a navigable active destination in desktop and mobile navigation", async () => {
+    const user = userEvent.setup();
+    renderNavigation({ ...defaultProps, activeDestination: "calendar" });
+
+    for (const calendarLink of screen.getAllByRole("link", { name: "Calendar" })) {
+      expect(calendarLink).toHaveAttribute("href", "/calendar");
+      expect(calendarLink).toHaveAttribute("aria-current", "page");
+    }
+
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    const drawer = screen.getByRole("dialog", { name: "Job Buddy navigation" });
+    expect(within(drawer).getByRole("link", { name: "Calendar" })).toHaveAttribute(
+      "href",
+      "/calendar",
+    );
+  });
+
   it("reports each exact Add opener and honors the disabled state", async () => {
     const onAddApplication = vi.fn();
     const user = userEvent.setup();
@@ -188,6 +205,7 @@ describe("ApplicationNavigation", () => {
     renderNavigation(defaultProps);
 
     expect(screen.getByTestId("workspace-rail")).toHaveClass("w-16");
+    expect(screen.getAllByLabelText("Jobuddy").length).toBeGreaterThanOrEqual(3);
     expect(screen.getByText("Workspace")).toBeInTheDocument();
     const collapse = screen.getByRole("button", { name: "Collapse sidebar" });
     expect(collapse).toHaveAttribute("aria-expanded", "true");

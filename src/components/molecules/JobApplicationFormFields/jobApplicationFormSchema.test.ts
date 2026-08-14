@@ -14,7 +14,6 @@ const validValues = {
   status: "saved",
   applied_date: "2024-02-29",
   notes: "Follow up next week",
-  resume_version: "frontend-v2",
 };
 
 function fieldMessage(result: ReturnType<typeof jobApplicationFormSchema.safeParse>) {
@@ -31,7 +30,7 @@ describe("jobApplicationFormSchema", () => {
       status: "saved",
       applied_date: "",
       notes: "",
-      resume_version: "",
+      resume_id: null,
     });
   });
 
@@ -133,18 +132,17 @@ describe("jobApplicationFormSchema", () => {
     },
   );
 
-  it("normalizes empty optional text and preserves non-empty notes", () => {
+  it("normalizes empty optional text and preserves an existing resume link", () => {
     const emptyResult = jobApplicationFormSchema.safeParse({
       ...validValues,
       job_url: " ",
       applied_date: "",
       notes: "   ",
-      resume_version: "   ",
     });
     const populatedResult = jobApplicationFormSchema.safeParse({
       ...validValues,
       notes: "  Keep this spacing  ",
-      resume_version: "  v4  ",
+      resume_id: "11111111-1111-4111-8111-111111111111",
     });
 
     expect(emptyResult.success).toBe(true);
@@ -153,13 +151,15 @@ describe("jobApplicationFormSchema", () => {
         job_url: null,
         applied_date: null,
         notes: null,
-        resume_version: null,
+        resume_id: null,
       });
     }
     expect(populatedResult.success).toBe(true);
     if (populatedResult.success) {
       expect(populatedResult.data.notes).toBe("  Keep this spacing  ");
-      expect(populatedResult.data.resume_version).toBe("v4");
+      expect(populatedResult.data.resume_id).toBe(
+        "11111111-1111-4111-8111-111111111111",
+      );
     }
   });
 
@@ -173,7 +173,7 @@ describe("jobApplicationFormSchema", () => {
       status: "interview",
       applied_date: null,
       notes: null,
-      resume_version: null,
+      resume_id: null,
       order_index: 1_000,
       created_at: "2026-08-11T00:00:00.000Z",
       updated_at: "2026-08-11T00:00:00.000Z",
@@ -186,7 +186,7 @@ describe("jobApplicationFormSchema", () => {
       status: "interview",
       applied_date: "",
       notes: "",
-      resume_version: "",
+      resume_id: null,
     });
   });
 

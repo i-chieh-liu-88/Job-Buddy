@@ -14,7 +14,7 @@ const applications: JobApplication[] = [
     status: "saved",
     applied_date: null,
     notes: null,
-    resume_version: null,
+    resume_id: null,
     order_index: 1_000,
     created_at: "2026-08-11T00:00:00.000Z",
     updated_at: "2026-08-11T00:00:00.000Z",
@@ -28,7 +28,7 @@ const applications: JobApplication[] = [
     status: "interview",
     applied_date: "2026-08-10",
     notes: null,
-    resume_version: "product-v2",
+    resume_id: "resume-2",
     order_index: 1_000,
     created_at: "2026-08-11T00:00:00.000Z",
     updated_at: "2026-08-11T00:00:00.000Z",
@@ -74,6 +74,54 @@ describe("KanbanBoard", () => {
     expect(screen.getByTestId("status-ping-applied")).toHaveClass(
       "animate-ping",
     );
+  });
+
+  it("offers the add action only from an empty Saved column", async () => {
+    const onAddApplication = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <KanbanBoard
+        applications={applications.filter(({ status }) => status !== "saved")}
+        onAddApplication={onAddApplication}
+        onReorder={vi.fn()}
+      />,
+    );
+
+    const savedColumn = screen.getByRole("region", { name: "Saved (0)" });
+    const addButton = within(savedColumn).getByRole("button", {
+      name: "Add application",
+    });
+    const label = within(addButton).getByText("Add application");
+    const plusIcon = addButton.querySelector("svg[aria-hidden='true']");
+
+    expect(addButton).toHaveClass("normal-case!");
+    expect(label).toHaveClass("font-sans!", "text-sm!", "font-normal!");
+    expect(plusIcon).toHaveAttribute("stroke-width", "1.25");
+    await user.click(addButton);
+
+    expect(onAddApplication).toHaveBeenCalledWith(addButton);
+    expect(
+      within(screen.getByRole("region", { name: "Applied (0)" })).queryByRole(
+        "button",
+        { name: "Add application" },
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("disables the Saved empty-state add action when creation is disabled", () => {
+    render(
+      <KanbanBoard
+        applications={applications.filter(({ status }) => status !== "saved")}
+        isAddDisabled
+        onAddApplication={vi.fn()}
+        onReorder={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Add application" }),
+    ).toBeDisabled();
   });
 
   it("selects the application from its card content button", async () => {

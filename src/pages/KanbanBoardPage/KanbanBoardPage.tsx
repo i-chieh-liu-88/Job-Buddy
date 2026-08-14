@@ -1,6 +1,7 @@
 import { UserButton } from "@clerk/clerk-react";
+import { useSearch } from "@tanstack/react-router";
 import { PanelLeft } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AddJobApplicationModal } from "../../components/organisms/AddJobApplicationModal/AddJobApplicationModal";
 import type { JobApplicationFormData } from "../../components/molecules/JobApplicationFormFields/jobApplicationFormSchema";
 import {
@@ -19,11 +20,14 @@ import {
   useReorderJobApplications,
   useUpdateJobApplication,
 } from "../../hooks/useJobApplications";
+import { useResumes } from "../../hooks/useResumes";
 import type { UpdateJobApplicationInput } from "../../hooks/useJobApplications";
 import type { ReorderResult } from "../../components/organisms/KanbanBoard/reorderApplications";
 import { JOB_APPLICATION_STATUS_ORDER } from "../../lib/jobApplicationStatusPresentation";
 import { ApplicationShell } from "../../layouts/ApplicationShell/ApplicationShell";
 import type { JobApplication } from "../../types/database";
+
+/* eslint-disable react-hooks/set-state-in-effect */
 
 const QUERY_ERROR_FIELDS = ["name", "code", "message"] as const;
 
@@ -54,6 +58,7 @@ export function KanbanBoardPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplication | null>(null);
+  const processedDeepLinkIdRef = useRef<string | null>(null);
   const addApplicationOpenerRef = useRef<HTMLButtonElement | null>(null);
   const pendingAddFocusRestorationRef = useRef(false);
   const selectedApplicationOpenerRef = useRef<HTMLButtonElement | null>(null);
@@ -63,11 +68,13 @@ export function KanbanBoardPage() {
   } | null>(null);
   const applicationsHeadingRef = useRef<HTMLHeadingElement>(null);
   const applicationsQuery = useJobApplications();
+  const { applicationId } = useSearch({ from: "/" });
+  const resumesQuery = useResumes();
   const createApplication = useCreateJobApplication();
   const reorderApplications = useReorderJobApplications();
   const updateApplication = useUpdateJobApplication();
   const deleteApplication = useDeleteJobApplication();
-  const applications = applicationsQuery.data ?? [];
+  const applications = useMemo(() => applicationsQuery.data ?? [], [applicationsQuery.data]);
   const stageCounts = JOB_APPLICATION_STATUS_ORDER.reduce<ApplicationStageCounts>(
     (counts, status) => ({
       ...counts,
@@ -77,6 +84,29 @@ export function KanbanBoardPage() {
     }),
     { saved: 0, applied: 0, interview: 0, offer: 0, rejected: 0 },
   );
+
+  useEffect(() => {
+    if (
+      applicationsQuery.isPending ||
+      !applicationId ||
+      processedDeepLinkIdRef.current === applicationId
+    ) {
+      return;
+    }
+
+    processedDeepLinkIdRef.current = applicationId;
+    const application = applications.find((candidate) => candidate.id === applicationId);
+    if (!application) return;
+
+    updateApplication.reset();
+    deleteApplication.reset();
+    pendingFocusRestorationRef.current = null;
+    selectedApplicationOpenerRef.current = null;
+    // The deep-link effect must commit synchronously. Strict Mode cleans up an
+    // animation frame from its first effect pass before the frame can run.
+    setSelectedApplication(application);
+    setIsDetailOpen(true);
+  }, [applicationId, applications, applicationsQuery.isPending, deleteApplication, updateApplication]);
 
   useEffect(() => {
     if (isAddOpen || !pendingAddFocusRestorationRef.current) return;
@@ -264,7 +294,9 @@ export function KanbanBoardPage() {
             <div className="w-full pb-4">
               <KanbanBoard
                 applications={applications}
+                isAddDisabled={createApplication.isPending}
                 isUpdating={reorderApplications.isPending}
+                onAddApplication={handleOpenAddApplication}
                 onReorder={handleReorder}
                 onSelectApplication={handleSelectApplication}
               />
@@ -292,8 +324,10 @@ export function KanbanBoardPage() {
               application={selectedApplication}
               hasDeleteError={deleteApplication.isError}
               hasSaveError={updateApplication.isError}
+              hasResumesError={resumesQuery.isError}
               isDeleting={deleteApplication.isPending}
               isSaving={updateApplication.isPending}
+              isResumesLoading={resumesQuery.isPending}
               onDelete={(id) => deleteApplication.mutateAsync(id)}
               onExitComplete={handleDetailExitComplete}
               onOpenChange={(open) => {
@@ -301,6 +335,7 @@ export function KanbanBoardPage() {
               }}
               onSave={handleSaveApplication}
               open={isDetailOpen}
+              resumes={resumesQuery.data ?? []}
             />
           ) : null}
           </div>

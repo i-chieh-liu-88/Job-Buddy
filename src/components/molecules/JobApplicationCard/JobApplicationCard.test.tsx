@@ -33,7 +33,7 @@ const application: JobApplication = {
   status: "saved",
   applied_date: null,
   notes: null,
-  resume_version: null,
+  resume_id: null,
   order_index: 1_000,
   created_at: "2026-08-11T00:00:00.000Z",
   updated_at: "2026-08-11T00:00:00.000Z",
@@ -99,6 +99,20 @@ describe("JobApplicationCard", () => {
     expect(dragButton).toHaveClass("touch-none");
     expect(openButton).not.toHaveAttribute("data-sortable-attributes");
     expect(setActivatorNodeRef).toHaveBeenCalledWith(dragButton);
+  });
+
+  it("shows a six-dot drag indicator inside the drag handle", () => {
+    render(<JobApplicationCard application={application} onSelect={vi.fn()} />);
+
+    const dragButton = screen.getByRole("button", {
+      name: "Drag Frontend Engineer at Acme",
+    });
+
+    const dragIndicator = dragButton.querySelector("svg[aria-hidden='true']");
+
+    expect(dragIndicator).toBeVisible();
+    expect(dragIndicator?.querySelectorAll("circle")).toHaveLength(6);
+    expect(dragButton).not.toHaveTextContent("↕");
   });
 
   it("marks the opener by application and keeps phrasing content inside it", () => {

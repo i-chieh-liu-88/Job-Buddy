@@ -71,7 +71,7 @@ describe("AddJobApplicationModal", () => {
     expect(screen.getByLabelText("Status")).toHaveValue("saved");
     expect(screen.getByLabelText("Applied date")).toHaveValue("");
     expect(screen.getByLabelText("Notes")).toHaveValue("");
-    expect(screen.getByLabelText("Resume version")).toHaveValue("");
+    expect(screen.queryByLabelText("Resume version")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Company")).toHaveFocus();
     expect(screen.getByRole("button", { name: "Add application" }).closest("form"))
       .toHaveAttribute("novalidate");
@@ -117,7 +117,6 @@ describe("AddJobApplicationModal", () => {
     );
     await user.selectOptions(screen.getByLabelText("Status"), "interview");
     await user.type(screen.getByLabelText("Notes"), "  Keep spacing  ");
-    await user.type(screen.getByLabelText("Resume version"), "  v3  ");
     await user.click(screen.getByRole("button", { name: "Add application" }));
 
     await waitFor(() => {
@@ -128,7 +127,7 @@ describe("AddJobApplicationModal", () => {
         status: "interview",
         applied_date: null,
         notes: "  Keep spacing  ",
-        resume_version: "v3",
+        resume_id: null,
       });
     });
     await waitFor(() => expect(props.onClose).toHaveBeenCalledOnce());

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { JobApplicationFormFields } from "./JobApplicationFormFields";
+import type { Resume } from "../../../types/database";
 import type {
   JobApplicationFormErrors,
   JobApplicationFormValues,
@@ -13,17 +14,31 @@ const values: JobApplicationFormValues = {
   status: "interview",
   applied_date: "2026-08-10",
   notes: "Follow up",
-  resume_version: "frontend-v2",
+  resume_id: null,
 };
+
+const resumes: Resume[] = [
+  {
+    id: "11111111-1111-4111-8111-111111111111",
+    user_id: "user-1",
+    label: "Frontend v2",
+    file_path: "user-1/resume-1/frontend-v2.pdf",
+    file_type: "application/pdf",
+    file_size: 1_024,
+    uploaded_at: "2026-08-13T00:00:00.000Z",
+  },
+];
 
 function renderFields({
   disabled = false,
   errors = {},
   layout,
+  showResumePicker = false,
 }: {
   disabled?: boolean;
   errors?: JobApplicationFormErrors;
   layout?: "responsive" | "single-column";
+  showResumePicker?: boolean;
 } = {}) {
   const onChange = vi.fn();
   const setFieldRef = vi.fn();
@@ -34,6 +49,8 @@ function renderFields({
       errors={errors}
       idPrefix="test-application"
       layout={layout}
+      resumes={resumes}
+      showResumePicker={showResumePicker}
       values={values}
       onChange={onChange}
       setFieldRef={setFieldRef}
@@ -65,9 +82,7 @@ describe("JobApplicationFormFields", () => {
     expect(screen.getByLabelText("Notes").parentElement).not.toHaveClass(
       "md:col-span-2",
     );
-    expect(
-      screen.getByLabelText("Resume version").parentElement,
-    ).not.toHaveClass("md:col-span-2");
+    expect(screen.queryByLabelText("Resume version")).not.toBeInTheDocument();
   });
 
   it("groups every editable field as application details", () => {
@@ -84,7 +99,6 @@ describe("JobApplicationFormFields", () => {
       "Status",
       "Applied date",
       "Notes",
-      "Resume version",
     ]) {
       expect(within(details).getByLabelText(label)).toBeVisible();
     }
@@ -103,9 +117,7 @@ describe("JobApplicationFormFields", () => {
     expect(screen.getByLabelText("Status")).toHaveValue("interview");
     expect(screen.getByLabelText("Applied date")).toHaveValue("2026-08-10");
     expect(screen.getByLabelText("Notes")).toHaveValue("Follow up");
-    expect(screen.getByLabelText("Resume version")).toHaveValue(
-      "frontend-v2",
-    );
+    expect(screen.queryByLabelText("Resume version")).not.toBeInTheDocument();
     expect(
       screen.getAllByRole("option").map((option) => option.textContent),
     ).toEqual(["Saved", "Applied", "Interview", "Offer", "Rejected"]);
@@ -121,7 +133,6 @@ describe("JobApplicationFormFields", () => {
       "Status",
       "Applied date",
       "Notes",
-      "Resume version",
     ]) {
       expect(screen.getByLabelText(label)).toBeDisabled();
     }
@@ -173,6 +184,22 @@ describe("JobApplicationFormFields", () => {
     expect(setFieldRef).toHaveBeenCalledWith(
       "notes",
       screen.getByLabelText("Notes"),
+    );
+  });
+
+  it("renders an optional resume picker with the current linked resume", () => {
+    const { onChange } = renderFields({ showResumePicker: true });
+
+    expect(screen.getByLabelText("Resume")).toHaveValue("");
+    expect(screen.getByRole("option", { name: "No resume linked" })).toBeVisible();
+
+    fireEvent.change(screen.getByLabelText("Resume"), {
+      target: { value: "11111111-1111-4111-8111-111111111111" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith(
+      "resume_id",
+      "11111111-1111-4111-8111-111111111111",
     );
   });
 });

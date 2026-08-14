@@ -32,14 +32,18 @@ const noopSelectApplication: SelectJobApplication = () => {};
 
 type KanbanBoardProps = {
   applications: JobApplication[];
+  isAddDisabled?: boolean;
   isUpdating?: boolean;
+  onAddApplication?: (opener: HTMLButtonElement) => void;
   onReorder: (result: ReorderResult) => void;
   onSelectApplication?: SelectJobApplication;
 };
 
 export function KanbanBoard({
   applications,
+  isAddDisabled = false,
   isUpdating = false,
+  onAddApplication,
   onReorder,
   onSelectApplication = noopSelectApplication,
 }: KanbanBoardProps) {
@@ -87,8 +91,12 @@ export function KanbanBoard({
             <div key={status} className="min-w-0">
               <KanbanColumn
                 applications={columnApplications}
+                isAddDisabled={isAddDisabled}
                 isDisabled={isUpdating}
                 label={label}
+                onAddApplication={
+                  status === "saved" ? onAddApplication : undefined
+                }
                 onSelectApplication={onSelectApplication}
                 status={status}
               />

@@ -3,13 +3,15 @@ import type { ReactNode } from "react";
 import {
   BarChart3,
   Bell,
-  BriefcaseBusiness,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Download,
+  FileText,
   LayoutDashboard,
 } from "lucide-react";
 import { AddApplicationButton } from "../../atoms/AddApplicationButton/AddApplicationButton";
+import { JobuddyLogo } from "../../atoms/JobuddyLogo/JobuddyLogo";
 import {
   AnimatedSidebar,
   AnimatedSidebarContent,
@@ -31,6 +33,7 @@ import type { JobApplicationStatus } from "../../../types/database";
 export type ApplicationStageCounts = Record<JobApplicationStatus, number>;
 
 type ApplicationNavigationProps = {
+  activeDestination?: "applications" | "calendar" | "resumes";
   accountMenu: ReactNode;
   isAddDisabled: boolean;
   onAddApplication: (opener: HTMLButtonElement) => void;
@@ -91,9 +94,11 @@ function StageSummary({
 }
 
 function ApplicationDestinations({
+  activeDestination,
   stageCounts,
   summaryTitleId,
 }: {
+  activeDestination: "applications" | "calendar" | "resumes";
   stageCounts: ApplicationStageCounts;
   summaryTitleId: string;
 }) {
@@ -103,10 +108,28 @@ function ApplicationDestinations({
         <li>
           <a
             href="/"
-            aria-current="page"
+            aria-current={activeDestination === "applications" ? "page" : undefined}
             className="flex min-h-10 items-center rounded-lg bg-hover px-3 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             Applications
+          </a>
+        </li>
+        <li>
+          <a
+            href="/resumes"
+            aria-current={activeDestination === "resumes" ? "page" : undefined}
+            className="flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-ink hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
+            Resumes
+          </a>
+        </li>
+        <li>
+          <a
+            href="/calendar"
+            aria-current={activeDestination === "calendar" ? "page" : undefined}
+            className="flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-ink hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
+            Calendar
           </a>
         </li>
         {futureNavigationItems.map((item) => (
@@ -134,20 +157,13 @@ function ApplicationDestinations({
 function DesktopIdentity({ isCollapsed }: { isCollapsed: boolean }): ReactNode {
   if (isCollapsed) {
     return (
-      <div
-        className="grid size-10 place-items-center self-center rounded-xl bg-hover text-ink"
-        title="Workspace"
-      >
-        <BriefcaseBusiness aria-hidden="true" className="size-5" />
-      </div>
+      <JobuddyLogo compact className="self-center" />
     );
   }
 
   return (
     <div className="px-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-        Job Buddy
-      </p>
+      <JobuddyLogo />
       <p className="mt-1 text-lg font-semibold text-ink">Workspace</p>
     </div>
   );
@@ -170,17 +186,30 @@ function DesktopAddApplicationButton(props: {
 }
 
 function DesktopApplicationDestinations(props: {
+  activeDestination: "applications" | "calendar" | "resumes";
   isCollapsed: boolean;
   stageCounts: ApplicationStageCounts;
 }): ReactNode {
-  const { isCollapsed, stageCounts } = props;
+  const { activeDestination, isCollapsed, stageCounts } = props;
 
   const destinations: readonly DesktopDestination[] = [
     {
       label: "Applications",
       icon: <LayoutDashboard className="size-4" />,
       href: "/",
-      isActive: true,
+      isActive: activeDestination === "applications",
+    },
+    {
+      label: "Resumes",
+      icon: <FileText className="size-4" />,
+      href: "/resumes",
+      isActive: activeDestination === "resumes",
+    },
+    {
+      label: "Calendar",
+      icon: <CalendarDays className="size-4" />,
+      href: "/calendar",
+      isActive: activeDestination === "calendar",
     },
     {
       label: "Stats",
@@ -284,6 +313,7 @@ function DesktopApplicationDestinations(props: {
 }
 
 function DesktopApplicationNavigation({
+  activeDestination,
   accountMenu,
   isAddDisabled,
   onAddApplication,
@@ -327,6 +357,7 @@ function DesktopApplicationNavigation({
         </AnimatedSidebarHeader>
         <AnimatedSidebarContent>
           <DesktopApplicationDestinations
+            activeDestination={activeDestination ?? "applications"}
             isCollapsed={isCollapsed}
             stageCounts={stageCounts}
           />
@@ -352,6 +383,7 @@ function DesktopApplicationNavigation({
 }
 
 export function ApplicationNavigation({
+  activeDestination = "applications",
   accountMenu,
   isAddDisabled,
   onAddApplication,
@@ -393,6 +425,7 @@ export function ApplicationNavigation({
   return (
     <>
       <DesktopApplicationNavigation
+        activeDestination={activeDestination}
         accountMenu={accountMenu}
         isAddDisabled={isAddDisabled}
         onAddApplication={onAddApplication}
@@ -409,9 +442,7 @@ export function ApplicationNavigation({
         >
           <span aria-hidden="true">☰</span>
         </button>
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[0.08em] text-ink">
-          JOB BUDDY
-        </span>
+        <JobuddyLogo className="min-w-0 flex-1" />
         <AddApplicationButton
           disabled={isAddDisabled}
           onClick={(event) => onAddApplication(event.currentTarget)}
@@ -429,9 +460,7 @@ export function ApplicationNavigation({
         onClose={restoreMenuFocus}
       >
         <header className="flex min-h-16 shrink-0 items-center justify-between border-b border-line px-4">
-          <span className="text-sm font-semibold tracking-[0.08em] text-ink">
-            JOB BUDDY
-          </span>
+          <JobuddyLogo />
           <button
             ref={closeDrawerButtonRef}
             type="button"
@@ -445,6 +474,7 @@ export function ApplicationNavigation({
 
         <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-5" aria-label="Applications">
           <ApplicationDestinations
+            activeDestination={activeDestination}
             stageCounts={stageCounts}
             summaryTitleId="mobile-stage-summary-title"
           />

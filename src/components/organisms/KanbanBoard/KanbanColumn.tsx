@@ -3,6 +3,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { Plus } from "lucide-react";
 import type { JobApplication, JobApplicationStatus } from "../../../types/database";
 import { JOB_APPLICATION_STATUS_PRESENTATION } from "../../../lib/jobApplicationStatusPresentation";
 import {
@@ -12,16 +13,20 @@ import {
 
 type KanbanColumnProps = {
   applications: JobApplication[];
+  isAddDisabled?: boolean;
   isDisabled: boolean;
   label: string;
+  onAddApplication?: (opener: HTMLButtonElement) => void;
   onSelectApplication: SelectJobApplication;
   status: JobApplicationStatus;
 };
 
 export function KanbanColumn({
   applications,
+  isAddDisabled = false,
   isDisabled,
   label,
+  onAddApplication,
   onSelectApplication,
   status,
 }: KanbanColumnProps) {
@@ -67,7 +72,25 @@ export function KanbanColumn({
         strategy={verticalListSortingStrategy}
       >
         <div className="space-y-3">
-          {applications.length === 0 ? (
+          {applications.length === 0 && status === "saved" && onAddApplication ? (
+            <button
+              type="button"
+              className="group grid min-h-24 w-full cursor-pointer place-items-center rounded-lg border border-dashed border-primary/45 bg-primary/[0.03] p-4 text-center text-sm normal-case! text-muted transition-[background-color,border-color,color] hover:border-primary/80 hover:bg-primary/[0.08] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+              disabled={isAddDisabled}
+              onClick={(event) => onAddApplication(event.currentTarget)}
+            >
+              <span className="flex flex-col items-center gap-2">
+                <Plus
+                  aria-hidden="true"
+                  className="size-5 text-primary transition-transform group-hover:scale-110 motion-reduce:transition-none"
+                  strokeWidth={1.25}
+                />
+                <span className="font-sans! text-sm! font-normal!">
+                  Add application
+                </span>
+              </span>
+            </button>
+          ) : applications.length === 0 ? (
             <p className="grid min-h-24 place-items-center rounded-lg border border-dashed border-line bg-canvas/45 p-4 text-center text-sm text-muted">
               No applications yet
             </p>

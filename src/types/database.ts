@@ -22,11 +22,50 @@ export type JobApplication = {
   status: JobApplicationStatus;
   applied_date: string | null;
   notes: string | null;
-  resume_version: string | null;
+  resume_id: string | null;
   order_index: number;
   created_at: string;
   updated_at: string;
 };
+
+export type Resume = {
+  id: string;
+  user_id: string;
+  label: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+  uploaded_at: string;
+};
+
+export type ResumeInsert = Omit<Resume, "id" | "uploaded_at"> & {
+  id?: string;
+  uploaded_at?: string;
+};
+
+export type ResumeUpdate = Partial<
+  Omit<Resume, "id" | "user_id" | "uploaded_at">
+>;
+
+export type Interview = {
+  id: string;
+  user_id: string;
+  job_application_id: string;
+  round_label: string;
+  scheduled_at: string;
+  location_or_link: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type InterviewInsert = Omit<Interview, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export type InterviewUpdate = Partial<
+  Omit<Interview, "id" | "user_id" | "job_application_id" | "created_at">
+>;
 
 export type JobApplicationInsert = Omit<
   JobApplication,
@@ -50,6 +89,18 @@ export type Database = {
         Row: JobApplication;
         Insert: JobApplicationInsert;
         Update: JobApplicationUpdate;
+        Relationships: [];
+      };
+      resumes: {
+        Row: Resume;
+        Insert: ResumeInsert;
+        Update: ResumeUpdate;
+        Relationships: [];
+      };
+      interviews: {
+        Row: Interview;
+        Insert: InterviewInsert;
+        Update: InterviewUpdate;
         Relationships: [];
       };
     };
