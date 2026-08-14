@@ -35,7 +35,13 @@ describe("AuthGate", () => {
     expect(screen.getByRole("status")).toHaveAccessibleName(
       "Entering Job Buddy workspace",
     );
-    expect(screen.getByTestId("dither-loader-grid")).toBeVisible();
+    expect(screen.getByTestId("ascii-bounce-loader-glyph")).toHaveStyle({
+      fontSize: "64px",
+    });
+    expect(screen.queryByTestId("dither-loader-grid")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Entering Job Buddy workspace"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Protected board")).not.toBeInTheDocument();
   });
 
