@@ -7,7 +7,7 @@ import {
   SignUpButton,
 } from "@clerk/clerk-react";
 import type { PropsWithChildren } from "react";
-import { AsciiBounceLoader } from "../../atoms/AsciiBounceLoader/AsciiBounceLoader";
+import { NewtonLoader } from "../../atoms/NewtonLoader/NewtonLoader";
 import { ArchitectureWaveBackground } from "../../backgrounds/ArchitectureWaveBackground/ArchitectureWaveBackground";
 
 export function AuthGate({ children }: PropsWithChildren) {
@@ -15,7 +15,7 @@ export function AuthGate({ children }: PropsWithChildren) {
     <>
       <ClerkLoading>
         <main className="grid min-h-screen place-items-center bg-canvas px-6">
-          <AsciiBounceLoader label="Entering Job Buddy workspace" size={64} />
+          <NewtonLoader label="Entering Job Buddy workspace" size={64} />
         </main>
       </ClerkLoading>
 
