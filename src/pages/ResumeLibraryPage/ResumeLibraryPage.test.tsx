@@ -5,6 +5,7 @@ import { ResumeLibraryPage } from "./ResumeLibraryPage";
 vi.mock("@clerk/clerk-react", () => ({ UserButton: () => <div>User</div> }));
 vi.mock("../../hooks/useJobApplications", () => ({
   useJobApplications: () => ({ data: [], isPending: false }),
+  useCreateJobApplication: () => ({ isError: false, isPending: false, mutateAsync: vi.fn(), reset: vi.fn() }),
 }));
 vi.mock("../../hooks/useResumes", () => ({
   useDeleteResume: () => ({ isError: false, isPending: false, mutateAsync: vi.fn() }),

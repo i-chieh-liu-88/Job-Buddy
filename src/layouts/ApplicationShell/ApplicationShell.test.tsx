@@ -3,6 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAnimatedSidebar } from "../../components/atoms/AnimatedSidebar/AnimatedSidebar";
 import { ApplicationShell, SIDEBAR_STORAGE_KEY } from "./ApplicationShell";
 
+vi.mock("@clerk/clerk-react", () => ({
+  useAuth: () => ({ isLoaded: true, userId: "user-1", getToken: async () => null }),
+}));
+vi.mock("../../hooks/useJobApplications", () => ({
+  useJobApplications: () => ({ data: [], isPending: false, isError: false }),
+  useCreateJobApplication: () => ({ isError: false, isPending: false, mutateAsync: vi.fn(), reset: vi.fn() }),
+}));
+
 function mockDesktopViewport() {
   vi.stubGlobal("matchMedia", (query: string) => ({
     matches: false,

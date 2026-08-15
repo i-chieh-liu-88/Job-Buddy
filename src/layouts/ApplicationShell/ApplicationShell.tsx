@@ -1,15 +1,21 @@
 import {
   type CSSProperties,
+  type MouseEvent,
   type PropsWithChildren,
+  useRef,
   type ReactNode,
   useState,
 } from "react";
 import { AnimatedSidebarProvider } from "../../components/atoms/AnimatedSidebar/AnimatedSidebar";
+import { AddJobApplicationModal } from "../../components/organisms/AddJobApplicationModal/AddJobApplicationModal";
+import type { JobApplicationFormData } from "../../components/molecules/JobApplicationFormFields/jobApplicationFormSchema";
+import { useCreateJobApplication, useJobApplications } from "../../hooks/useJobApplications";
 
 export const SIDEBAR_STORAGE_KEY = "jobuddy:sidebar-expanded";
 
 type ApplicationShellProps = PropsWithChildren<{
   navigation: ReactNode;
+  onAddApplication?: (opener: HTMLButtonElement) => void;
 }>;
 
 function readInitialSidebarState() {
@@ -24,8 +30,13 @@ function readInitialSidebarState() {
 export function ApplicationShell({
   children,
   navigation,
+  onAddApplication,
 }: ApplicationShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(readInitialSidebarState);
+  const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
+  const addOpenerRef = useRef<HTMLButtonElement | null>(null);
+  const applicationsQuery = useJobApplications();
+  const createApplication = useCreateJobApplication();
 
   const handleSidebarOpenChange = (nextOpen: boolean) => {
     setIsSidebarOpen(nextOpen);
@@ -36,18 +47,51 @@ export function ApplicationShell({
     }
   };
 
+  function handleShellClickCapture(event: MouseEvent<HTMLDivElement>) {
+    if (onAddApplication) return;
+    const target = event.target as HTMLElement;
+    const button = target.closest<HTMLButtonElement>('button[aria-label="Add application"]');
+    if (!button || button.disabled) return;
+    createApplication.reset();
+    addOpenerRef.current = button;
+    setIsGlobalAddOpen(true);
+  }
+
+  async function handleGlobalCreate(input: JobApplicationFormData) {
+    const destinationOrderIndexes = (applicationsQuery.data ?? [])
+      .filter((application) => application.status === input.status)
+      .map((application) => application.order_index);
+    return createApplication.mutateAsync({
+      ...input,
+      order_index: Math.max(0, ...destinationOrderIndexes) + 1_000,
+    });
+  }
+
   return (
-    <AnimatedSidebarProvider
-      open={isSidebarOpen}
-      onOpenChange={handleSidebarOpenChange}
-      className="bg-canvas text-ink"
-      style={{
-        "--sidebar-width": "14rem",
-        "--sidebar-width-icon": "4.25rem",
-      } as CSSProperties}
-    >
-      {navigation}
-      <main className="min-w-0 flex-1">{children}</main>
-    </AnimatedSidebarProvider>
+    <div onClickCapture={handleShellClickCapture}>
+      <AnimatedSidebarProvider
+        open={isSidebarOpen}
+        onOpenChange={handleSidebarOpenChange}
+        className="bg-canvas text-ink"
+        style={{
+          "--sidebar-width": "14rem",
+          "--sidebar-width-icon": "4.25rem",
+        } as CSSProperties}
+      >
+        {navigation}
+        <main className="min-w-0 flex-1">{children}</main>
+        {isGlobalAddOpen ? (
+          <AddJobApplicationModal
+            hasCreateError={createApplication.isError}
+            isCreating={createApplication.isPending}
+            onClose={() => {
+              setIsGlobalAddOpen(false);
+              addOpenerRef.current?.focus();
+            }}
+            onCreate={handleGlobalCreate}
+          />
+        ) : null}
+      </AnimatedSidebarProvider>
+    </div>
   );
 }

@@ -219,6 +219,7 @@ export function KanbanBoardPage() {
 
   return (
     <ApplicationShell
+      onAddApplication={handleOpenAddApplication}
       navigation={
         <ApplicationNavigation
           accountMenu={<UserButton />}
