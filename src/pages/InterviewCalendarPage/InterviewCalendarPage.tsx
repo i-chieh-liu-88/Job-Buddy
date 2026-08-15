@@ -57,8 +57,7 @@ export function InterviewCalendarPage() {
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-[96rem] pt-10 md:pt-14">
               <header className="mb-8">
-                <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-muted">Your job search workspace</p>
-                <TextReveal as="h1" className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl md:text-6xl" delay={0.15} split="char" stagger={0.035} text="Interview calendar" />
+                <TextReveal as="h1" className="font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl md:text-6xl" delay={0.15} text="Interview calendar" />
                 <TextReveal as="p" className="mt-3 max-w-2xl text-sm leading-6 text-muted" delay={0.52} stagger={0.025} text="Keep every interview round visible, organized, and on time." />
               </header>
 
