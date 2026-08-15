@@ -39,7 +39,6 @@ export function ResumeLibrary({
     <section aria-labelledby="resumes-title" className="pb-10">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-muted">Workspace library</p>
           <h1 id="resumes-title" className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl">Resumes</h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted">Keep the versions you tailor for each opportunity in one private library.</p>
         </div>

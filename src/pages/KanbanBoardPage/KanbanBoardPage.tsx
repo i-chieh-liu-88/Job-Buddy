@@ -1,4 +1,4 @@
-import { UserButton } from "@clerk/clerk-react";
+import { UserButton, useUser } from "@clerk/clerk-react";
 import { useSearch } from "@tanstack/react-router";
 import { PanelLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -54,6 +54,7 @@ function findApplicationOpener(applicationId: string) {
 }
 
 export function KanbanBoardPage() {
+  const { user } = useUser();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] =
@@ -75,6 +76,7 @@ export function KanbanBoardPage() {
   const updateApplication = useUpdateJobApplication();
   const deleteApplication = useDeleteJobApplication();
   const applications = useMemo(() => applicationsQuery.data ?? [], [applicationsQuery.data]);
+  const greeting = user?.firstName ? `Good to see you, ${user.firstName}.` : "Good to see you.";
   const stageCounts = JOB_APPLICATION_STATUS_ORDER.reduce<ApplicationStageCounts>(
     (counts, status) => ({
       ...counts,
@@ -242,13 +244,6 @@ export function KanbanBoardPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[96rem]">
             <header className="mb-8 pt-10 md:pt-14">
-              <TextReveal
-                as="p"
-                className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-muted"
-                delay={0.05}
-                stagger={0.05}
-                text="Your job search workspace"
-              />
               <h1
                 ref={applicationsHeadingRef}
                 className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl md:text-6xl"
@@ -266,7 +261,7 @@ export function KanbanBoardPage() {
                 className="mt-7 text-xl font-semibold tracking-[-0.02em] text-ink"
                 delay={0.36}
                 stagger={0.07}
-                text="Keep moving forward."
+                text={greeting}
               />
               <TextReveal
                 as="p"

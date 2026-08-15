@@ -85,6 +85,8 @@ function completeDrawerExit() {
 }
 
 vi.mock("@clerk/clerk-react", () => ({
+  useAuth: () => ({ isLoaded: true, userId: "user-1", getToken: async () => null }),
+  useUser: () => ({ user: { firstName: "Alex" } }),
   UserButton: () => <button type="button" aria-label="Account menu" />,
 }));
 
@@ -148,6 +150,10 @@ vi.mock("../../components/atoms/Drawer/Drawer", async () => {
 
 vi.mock("../../components/organisms/InterviewRounds/InterviewRounds", () => ({
   InterviewRounds: () => null,
+}));
+
+vi.mock("../../components/organisms/CompanyResearch/CompanyResearch", () => ({
+  CompanyResearch: () => null,
 }));
 
 vi.mock("../../hooks/useJobApplications", () => ({
@@ -251,9 +257,9 @@ describe("KanbanBoardPage", () => {
       "aria-expanded",
       "true",
     );
-    expect(screen.getByLabelText("Your job search workspace")).toBeVisible();
+    expect(screen.queryByLabelText("Your job search workspace")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Keep moving forward." }),
+      screen.getByRole("heading", { name: "Good to see you, Alex." }),
     ).toBeVisible();
     expect(
       screen.getByLabelText(
