@@ -9,6 +9,7 @@ export type InterviewQuestion = {
 };
 
 export type QuestionBankItem = InterviewQuestion & {
+  job_application_id: string;
   company: string;
   position: string;
   round_label: string;

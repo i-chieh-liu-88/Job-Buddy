@@ -47,8 +47,8 @@ export function useQuestionBank({ search, tags }: { search: string; tags: string
       const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map((row) => {
-        const nested = row as unknown as InterviewQuestion & { interviews: { round_label: string; scheduled_at: string; job_applications: { company: string; position: string } } };
-        return { ...nested, company: nested.interviews.job_applications.company, position: nested.interviews.job_applications.position, round_label: nested.interviews.round_label, scheduled_at: nested.interviews.scheduled_at };
+        const nested = row as unknown as InterviewQuestion & { interviews: { round_label: string; scheduled_at: string; job_applications: { id: string; company: string; position: string } } };
+        return { ...nested, job_application_id: nested.interviews.job_applications.id, company: nested.interviews.job_applications.company, position: nested.interviews.job_applications.position, round_label: nested.interviews.round_label, scheduled_at: nested.interviews.scheduled_at };
       }) as QuestionBankItem[];
     },
   });

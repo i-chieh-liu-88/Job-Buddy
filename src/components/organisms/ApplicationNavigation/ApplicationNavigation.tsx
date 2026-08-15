@@ -33,7 +33,7 @@ import type { JobApplicationStatus } from "../../../types/database";
 export type ApplicationStageCounts = Record<JobApplicationStatus, number>;
 
 type ApplicationNavigationProps = {
-  activeDestination?: "applications" | "calendar" | "resumes";
+  activeDestination?: "applications" | "calendar" | "resumes" | "questions";
   accountMenu: ReactNode;
   isAddDisabled: boolean;
   onAddApplication: (opener: HTMLButtonElement) => void;
@@ -98,7 +98,7 @@ function ApplicationDestinations({
   stageCounts,
   summaryTitleId,
 }: {
-  activeDestination: "applications" | "calendar" | "resumes";
+  activeDestination: "applications" | "calendar" | "resumes" | "questions";
   stageCounts: ApplicationStageCounts;
   summaryTitleId: string;
 }) {
@@ -130,6 +130,15 @@ function ApplicationDestinations({
             className="flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-ink hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             Calendar
+          </a>
+        </li>
+        <li>
+          <a
+            href="/questions"
+            aria-current={activeDestination === "questions" ? "page" : undefined}
+            className="flex min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-ink hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
+            Questions
           </a>
         </li>
         {futureNavigationItems.map((item) => (
@@ -164,7 +173,7 @@ function DesktopIdentity({ isCollapsed }: { isCollapsed: boolean }): ReactNode {
   return (
     <div className="px-3">
       <JobuddyLogo />
-      <p className="mt-1 text-lg font-semibold text-ink">Workspace</p>
+      <p className="mt-5 text-lg font-semibold text-ink">Workspace</p>
     </div>
   );
 }
@@ -177,16 +186,18 @@ function DesktopAddApplicationButton(props: {
   const { disabled, isCollapsed, onAddApplication } = props;
 
   return (
-    <AddApplicationButton
-      collapsed={isCollapsed}
-      disabled={disabled}
-      onClick={(event) => onAddApplication(event.currentTarget)}
-    />
+    <div className={cn("inline-flex", !isCollapsed && "my-2")}>
+      <AddApplicationButton
+        collapsed={isCollapsed}
+        disabled={disabled}
+        onClick={(event) => onAddApplication(event.currentTarget)}
+      />
+    </div>
   );
 }
 
 function DesktopApplicationDestinations(props: {
-  activeDestination: "applications" | "calendar" | "resumes";
+  activeDestination: "applications" | "calendar" | "resumes" | "questions";
   isCollapsed: boolean;
   stageCounts: ApplicationStageCounts;
 }): ReactNode {
@@ -210,6 +221,12 @@ function DesktopApplicationDestinations(props: {
       icon: <CalendarDays className="size-4" />,
       href: "/calendar",
       isActive: activeDestination === "calendar",
+    },
+    {
+      label: "Questions",
+      icon: <FileText className="size-4" />,
+      href: "/questions",
+      isActive: activeDestination === "questions",
     },
     {
       label: "Stats",

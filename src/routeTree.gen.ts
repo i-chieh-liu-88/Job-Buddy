@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as QuestionsRouteImport } from './routes/questions'
 import { Route as ResumesRouteImport } from './routes/resumes'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const CalendarRoute = CalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuestionsRoute = QuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResumesRoute = ResumesRouteImport.update({
   id: '/resumes',
   path: '/resumes',
@@ -32,30 +38,34 @@ const ResumesRoute = ResumesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
+  '/questions': typeof QuestionsRoute
   '/resumes': typeof ResumesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
+  '/questions': typeof QuestionsRoute
   '/resumes': typeof ResumesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
+  '/questions': typeof QuestionsRoute
   '/resumes': typeof ResumesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/calendar' | '/resumes'
+  fullPaths: '/' | '/calendar' | '/questions' | '/resumes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calendar' | '/resumes'
-  id: '__root__' | '/' | '/calendar' | '/resumes'
+  to: '/' | '/calendar' | '/questions' | '/resumes'
+  id: '__root__' | '/' | '/calendar' | '/questions' | '/resumes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarRoute: typeof CalendarRoute
+  QuestionsRoute: typeof QuestionsRoute
   ResumesRoute: typeof ResumesRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/questions': {
+      id: '/questions'
+      path: '/questions'
+      fullPath: '/questions'
+      preLoaderRoute: typeof QuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resumes': {
       id: '/resumes'
       path: '/resumes'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
+  QuestionsRoute: QuestionsRoute,
   ResumesRoute: ResumesRoute,
 }
 export const routeTree = rootRouteImport
