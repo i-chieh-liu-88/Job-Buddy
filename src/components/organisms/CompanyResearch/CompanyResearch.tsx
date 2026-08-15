@@ -251,7 +251,7 @@ function CompanyResearchPanel({
       <button
         type="button"
         aria-label="Company Research"
-        className="flex w-full items-center justify-between gap-3 text-left font-sans normal-case focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        className="!font-sans !normal-case flex w-full items-center justify-between gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         aria-expanded={expanded}
         aria-controls="company-research-panel"
         onClick={() => setIsExpanded((current) => !(current ?? hasResearchContent(research, interviewers.length)))}
