@@ -1,8 +1,28 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobuddyLogo } from "./JobuddyLogo";
 
+const { animationControls } = vi.hoisted(() => ({
+  animationControls: {
+    mount: vi.fn(() => () => undefined),
+    set: vi.fn(),
+    start: vi.fn(() => Promise.resolve()),
+    stop: vi.fn(),
+    subscribe: vi.fn(() => () => undefined),
+  },
+}));
+
+vi.mock("motion/react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("motion/react")>()),
+  useAnimationControls: () => animationControls,
+  useReducedMotion: () => false,
+}));
+
 describe("JobuddyLogo", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders the four-lobed mark beside a stationary Inter wordmark", () => {
     render(<JobuddyLogo />);
 
@@ -27,5 +47,13 @@ describe("JobuddyLogo", () => {
 
     expect(screen.getByLabelText("Jobuddy")).toBeInTheDocument();
     expect(screen.queryByText("Jobuddy")).not.toBeInTheDocument();
+  });
+
+  it("plays the mark animation when the wordmark is hovered", () => {
+    render(<JobuddyLogo />);
+
+    fireEvent.mouseEnter(screen.getByText("Jobuddy"));
+
+    expect(animationControls.start).toHaveBeenCalledOnce();
   });
 });

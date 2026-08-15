@@ -206,7 +206,11 @@ describe("ApplicationNavigation", () => {
 
     expect(screen.getByTestId("workspace-rail")).toHaveClass("w-16");
     expect(screen.getAllByLabelText("Jobuddy").length).toBeGreaterThanOrEqual(3);
-    expect(screen.getByText("Workspace")).toBeInTheDocument();
+    expect(screen.getByText("Workspace")).toHaveClass("mt-5");
+    const expandedAddButton = within(
+      screen.getByRole("complementary", { name: "Application navigation" }),
+    ).getByRole("button", { name: "Add application" });
+    expect(expandedAddButton.parentElement?.parentElement).toHaveClass("my-2");
     const collapse = screen.getByRole("button", { name: "Collapse sidebar" });
     expect(collapse).toHaveAttribute("aria-expanded", "true");
 

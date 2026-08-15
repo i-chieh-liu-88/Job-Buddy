@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import { cn } from "../../../lib/cn";
 
 type JobuddyLogoProps = {
@@ -8,67 +8,57 @@ type JobuddyLogoProps = {
   compact?: boolean;
 };
 
-const SPRING_LOGO = { type: "spring" as const, stiffness: 380, damping: 24 };
-const EYE_BOUNCE = {
-  y: [0, 1.5, -7, 0, -3.25, 0],
-  scaleY: [1, 0.82, 1.06, 0.94, 1.02, 1],
+const MARK_TRANSITION = {
+  duration: 0.56,
+  ease: "easeOut" as const,
+  times: [0, 0.34, 0.64, 0.82, 1],
 };
 
 export function JobuddyLogo({ className, compact = false }: JobuddyLogoProps) {
   const reduce = useReducedMotion() ?? false;
+  const markControls = useAnimationControls();
+
+  const animateMark = () => {
+    if (reduce) return;
+
+    void markControls.start({
+      rotate: [0, 30, -8, 4, 0],
+      transition: MARK_TRANSITION,
+    });
+  };
 
   return (
-    <motion.span
+    <span
       aria-label="Jobuddy"
       className={cn("inline-flex items-center gap-2", className)}
-      initial="rest"
-      animate="rest"
-      whileHover={reduce ? undefined : "hover"}
-      variants={{
-        rest: { scale: 1 },
-        hover: { scale: 1.015 },
-      }}
-      transition={SPRING_LOGO}
     >
       <motion.svg
         aria-hidden="true"
-        data-testid="jobuddy-smile-mark"
-        viewBox="0 0 48 48"
+        data-testid="jobuddy-mark"
+        viewBox="0 0 256 256"
         className="size-6 shrink-0 overflow-visible text-primary"
         fill="none"
+        animate={markControls}
+        initial={{ rotate: 0 }}
+        onMouseEnter={animateMark}
+        style={{ transformOrigin: "center" }}
       >
         <path
-          d="M48 48H24C37.255 48 48 37.255 48 24S37.255 0 24 0S0 10.745 0 24S10.745 48 24 48H0V0H48V48Z"
+          data-testid="jobuddy-mark-path"
+          d="M 192 0 C 227.346 0 256 28.654 256 64 C 256 99.346 227.346 128 192 128 C 227.346 128 256 156.654 256 192 C 256 227.346 227.346 256 192 256 C 156.654 256 128 227.346 128 192 C 128 227.346 99.346 256 64 256 C 28.654 256 0 227.346 0 192 C 0 156.654 28.654 128 64 128 C 28.654 128 0 99.346 0 64 C 0 28.654 28.654 0 64 0 C 99.346 0 128 28.654 128 64 C 128 28.654 156.654 0 192 0 Z M 128 100 C 112.536 100 100 112.536 100 128 C 100 143.464 112.536 156 128 156 C 143.464 156 156 143.464 156 128 C 156 112.536 143.464 100 128 100 Z"
           fill="currentColor"
-          fillRule="evenodd"
-        />
-        <motion.circle
-          data-testid="jobuddy-logo-eye"
-          cx="18"
-          cy="21"
-          r="3"
-          fill="currentColor"
-          style={{ transformBox: "fill-box", transformOrigin: "center" }}
-          variants={{ rest: { y: 0, scaleY: 1 }, hover: EYE_BOUNCE }}
-          transition={{ duration: 0.64, times: [0, 0.12, 0.34, 0.56, 0.75, 1], ease: "easeOut" }}
-        />
-        <motion.circle
-          data-testid="jobuddy-logo-eye"
-          cx="30"
-          cy="21"
-          r="3"
-          fill="currentColor"
-          style={{ transformBox: "fill-box", transformOrigin: "center" }}
-          variants={{ rest: { y: 0, scaleY: 1 }, hover: EYE_BOUNCE }}
-          transition={{ duration: 0.64, delay: 0.05, times: [0, 0.12, 0.34, 0.56, 0.75, 1], ease: "easeOut" }}
         />
       </motion.svg>
 
       {!compact ? (
-        <span aria-hidden="true" className="font-display text-base font-semibold tracking-[-0.03em] text-ink">
+        <span
+          aria-hidden="true"
+          className="font-display text-base font-semibold tracking-[-0.03em] text-ink"
+          onMouseEnter={animateMark}
+        >
           Jobuddy
         </span>
       ) : null}
-    </motion.span>
+    </span>
   );
 }
