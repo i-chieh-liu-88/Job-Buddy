@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Resume } from "../../../types/database";
+import { TextReveal } from "../../atoms/TextReveal/TextReveal";
 import { ResumeUploadModal } from "../ResumeUploadModal/ResumeUploadModal";
 
 type ResumeLibraryProps = {
@@ -39,8 +40,8 @@ export function ResumeLibrary({
     <section aria-labelledby="resumes-title" className="pb-10">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
-          <h1 id="resumes-title" className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl">Resumes</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted">Keep the versions you tailor for each opportunity in one private library.</p>
+          <h1 id="resumes-title" className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl"><TextReveal as="span" delay={0.15} split="char" stagger={0.035} text="Resumes" /></h1>
+          <TextReveal as="p" className="mt-3 max-w-xl text-sm leading-6 text-muted" delay={0.52} stagger={0.025} text="Keep the versions you tailor for each opportunity in one private library." />
         </div>
         <button className="inline-flex h-10 items-center justify-center rounded-md border border-line bg-canvas px-4 text-xs font-semibold uppercase tracking-[0.08em] text-ink transition-colors hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" type="button" onClick={() => setIsUploadOpen(true)}>
           Upload resume

@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { PanelLeft } from "lucide-react";
 import { useState } from "react";
 import { AnimatedSidebarTrigger } from "../../components/atoms/AnimatedSidebar/AnimatedSidebar";
+import { TextReveal } from "../../components/atoms/TextReveal/TextReveal";
 import { WorkspaceEngineeringGrid } from "../../components/backgrounds/WorkspaceEngineeringGrid/WorkspaceEngineeringGrid";
 import {
   ApplicationNavigation,
@@ -57,8 +58,8 @@ export function InterviewCalendarPage() {
             <div className="mx-auto max-w-[96rem] pt-10 md:pt-14">
               <header className="mb-8">
                 <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-muted">Your job search workspace</p>
-                <h1 className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl md:text-6xl">Interview calendar</h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Keep every interview round visible, organized, and on time.</p>
+                <TextReveal as="h1" className="mt-3 font-display text-4xl font-medium tracking-[-0.045em] text-ink sm:text-5xl md:text-6xl" delay={0.15} split="char" stagger={0.035} text="Interview calendar" />
+                <TextReveal as="p" className="mt-3 max-w-2xl text-sm leading-6 text-muted" delay={0.52} stagger={0.025} text="Keep every interview round visible, organized, and on time." />
               </header>
 
               {interviewsQuery.isPending ? <p role="status" className="text-sm text-muted">Loading interviews…</p> : null}
