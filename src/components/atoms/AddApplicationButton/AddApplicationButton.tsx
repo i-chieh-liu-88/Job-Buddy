@@ -16,14 +16,14 @@ export function AddApplicationButton({
 }: AddApplicationButtonProps) {
   return (
     <MagneticAddApplicationButton
-      aria-label={collapsed ? "Add application" : undefined}
+      aria-label="Add application"
       className={cn(
         "min-h-11 cursor-pointer rounded-full border-white/45 bg-[#0A0A0A]/80 px-3 text-ink backdrop-blur-sm hover:border-white/80 hover:bg-white/10",
         collapsed ? "size-11 p-0" : "gap-2.5",
       )}
       disabled={disabled}
       onClick={onClick}
-      title={collapsed ? "Add application" : undefined}
+      title="Add application"
       type="button"
       variant="outline"
     >
