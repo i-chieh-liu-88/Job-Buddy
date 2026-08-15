@@ -97,6 +97,28 @@ export function useUpsertCompanyResearch() {
   });
 }
 
+export function useDeleteCompanyResearch() {
+  const { userId } = useAuth();
+  const supabase = useSupabaseClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ applicationId }: { applicationId: string }) => {
+      const { error } = await supabase
+        .from("company_research")
+        .delete()
+        .eq("job_application_id", applicationId);
+      if (error) throw error;
+      return applicationId;
+    },
+    onSuccess: async (applicationId) => {
+      await queryClient.invalidateQueries({
+        queryKey: companyResearchKeys.research(applicationId, userId ?? "signed-out"),
+      });
+    },
+  });
+}
+
 export function useCreateInterviewer() {
   const { userId } = useAuth();
   const supabase = useSupabaseClient();

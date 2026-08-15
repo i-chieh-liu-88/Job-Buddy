@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Drawer } from "../../atoms/Drawer/Drawer";
 import { StatefulButton } from "../../atoms/StatefulButton/StatefulButton";
 import { InterviewRounds } from "../InterviewRounds/InterviewRounds";
+import { CompanyResearch } from "../CompanyResearch/CompanyResearch";
 import { JobApplicationFormFields } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import type { JobApplicationFormControl } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import {
@@ -222,6 +223,7 @@ export function JobApplicationDetailDrawer({
               The resume could not be opened. Please try again.
             </p>
           ) : null}
+          <CompanyResearch jobApplicationId={application.id} />
           <InterviewRounds jobApplicationId={application.id} />
           {hasResumesError ? (
             <p className="mt-4 text-sm text-danger" role="alert">

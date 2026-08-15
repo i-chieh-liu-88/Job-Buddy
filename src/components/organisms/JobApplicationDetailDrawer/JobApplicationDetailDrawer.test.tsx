@@ -31,6 +31,14 @@ vi.mock("../InterviewRounds/InterviewRounds", () => ({
   ),
 }));
 
+vi.mock("../CompanyResearch/CompanyResearch", () => ({
+  CompanyResearch: ({ jobApplicationId }: { jobApplicationId: string }) => (
+    <section aria-label="Company Research">
+      <span>{jobApplicationId}</span>
+    </section>
+  ),
+}));
+
 const application: JobApplication = {
   id: "application-1",
   user_id: "user-1",

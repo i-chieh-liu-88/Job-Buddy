@@ -6,6 +6,7 @@ import {
   companyResearchKeys,
   useCompanyResearch,
   useCreateInterviewer,
+  useDeleteCompanyResearch,
   useDeleteInterviewer,
   useInterviewers,
   useUpsertCompanyResearch,
@@ -121,6 +122,25 @@ describe("company research hooks", () => {
       salary_currency: "EUR",
       salary_source: "Levels.fyi",
     }, { onConflict: "job_application_id" });
+    await waitFor(() => expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: companyResearchKeys.research("application-1", "user-1"),
+    }));
+  });
+
+  it("deletes an application's research and invalidates only that research query", async () => {
+    const queryClient = queryClientFactory();
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+    deleteEq.mockResolvedValue({ error: null });
+
+    const { result } = renderHook(() => useDeleteCompanyResearch(), {
+      wrapper: wrapperFactory(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ applicationId: "application-1" });
+    });
+
+    expect(deleteEq).toHaveBeenCalledWith("job_application_id", "application-1");
     await waitFor(() => expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: companyResearchKeys.research("application-1", "user-1"),
     }));
