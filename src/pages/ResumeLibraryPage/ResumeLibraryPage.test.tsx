@@ -8,6 +8,8 @@ vi.mock("../../hooks/useJobApplications", () => ({
   useCreateJobApplication: () => ({ isError: false, isPending: false, mutateAsync: vi.fn(), reset: vi.fn() }),
 }));
 vi.mock("../../hooks/useResumes", () => ({
+  ACCEPTED_RESUME_FILE_TYPES: new Set(["application/pdf"]),
+  MAX_RESUME_FILE_SIZE: 10 * 1024 * 1024,
   useDeleteResume: () => ({ isError: false, isPending: false, mutateAsync: vi.fn() }),
   useResumes: () => ({ data: [], isError: false, isPending: false }),
   useUploadResume: () => ({ isError: false, isPending: false, mutateAsync: vi.fn() }),

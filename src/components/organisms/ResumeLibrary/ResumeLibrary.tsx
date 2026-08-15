@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { Resume } from "../../../types/database";
+import { AttachmentUpload } from "../../atoms/AttachmentUpload/AttachmentUpload";
 import { TextReveal } from "../../atoms/TextReveal/TextReveal";
+import { ACCEPTED_RESUME_FILE_TYPES, MAX_RESUME_FILE_SIZE } from "../../../hooks/useResumes";
 import { ResumeUploadModal } from "../ResumeUploadModal/ResumeUploadModal";
 
 type ResumeLibraryProps = {
@@ -34,6 +36,7 @@ export function ResumeLibrary({
   onUpload,
 }: ResumeLibraryProps) {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Resume | null>(null);
 
   return (
@@ -49,11 +52,23 @@ export function ResumeLibrary({
       </header>
 
       {resumes.length === 0 ? (
-        <div className="mt-8 grid min-h-56 place-items-center rounded-xl border border-dashed border-line bg-surface/70 px-6 text-center">
-          <div>
-            <h2 className="text-lg font-semibold text-ink">No resumes yet</h2>
-            <p className="mt-2 max-w-sm text-sm text-muted">Upload your first resume to keep job-specific versions organized.</p>
-          </div>
+        <div className="mt-8 rounded-xl border border-line bg-surface/70 p-4 sm:p-6">
+          <AttachmentUpload
+            accept={Array.from(ACCEPTED_RESUME_FILE_TYPES).join(",")}
+            description="PDF, DOC, or DOCX · up to 10 MB"
+            maxFileSize={MAX_RESUME_FILE_SIZE}
+            multiple={false}
+            title="Drop your resume here or browse files"
+            value={[]}
+            onFilesAdded={(_items, files) => {
+              const file = files[0] ?? null;
+              if (file) {
+                setPendingFile(file);
+                setIsUploadOpen(true);
+              }
+            }}
+            onFilesRejected={() => undefined}
+          />
         </div>
       ) : (
         <ul className="mt-8 divide-y divide-line rounded-xl border border-line bg-surface/70">
@@ -77,7 +92,7 @@ export function ResumeLibrary({
         </ul>
       )}
       {hasDeleteError ? <p className="mt-4 text-sm text-danger" role="alert">The resume could not be deleted. Please try again.</p> : null}
-      {isUploadOpen ? <ResumeUploadModal hasUploadError={hasUploadError} isUploading={isUploading} onClose={() => setIsUploadOpen(false)} onUpload={onUpload} /> : null}
+      {isUploadOpen ? <ResumeUploadModal hasUploadError={hasUploadError} initialFile={pendingFile} isUploading={isUploading} onClose={() => { setIsUploadOpen(false); setPendingFile(null); }} onUpload={onUpload} /> : null}
     </section>
   );
 }

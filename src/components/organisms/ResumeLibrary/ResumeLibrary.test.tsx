@@ -29,7 +29,7 @@ describe("ResumeLibrary", () => {
       />,
     );
 
-    expect(screen.getByText("No resumes yet")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Drop your resume here or browse files" })).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Upload resume" }));
     expect(screen.getByRole("dialog", { name: "Upload resume" })).toBeVisible();
   });

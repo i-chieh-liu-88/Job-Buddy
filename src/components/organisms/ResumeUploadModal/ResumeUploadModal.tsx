@@ -12,6 +12,7 @@ import { StatefulButton } from "../../atoms/StatefulButton/StatefulButton";
 
 type ResumeUploadModalProps = {
   hasUploadError: boolean;
+  initialFile?: File | null;
   isUploading: boolean;
   onClose: () => void;
   onUpload: (input: { file: File; label: string }) => Promise<unknown>;
@@ -22,13 +23,14 @@ const buttonClassName =
 
 export function ResumeUploadModal({
   hasUploadError,
+  initialFile = null,
   isUploading,
   onClose,
   onUpload,
 }: ResumeUploadModalProps) {
   const labelRef = useRef<HTMLInputElement>(null);
   const [label, setLabel] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(initialFile);
   const [errors, setErrors] = useState<{ file?: string; label?: string }>({});
 
   function validate(selectedFile: File | null, currentLabel: string) {
