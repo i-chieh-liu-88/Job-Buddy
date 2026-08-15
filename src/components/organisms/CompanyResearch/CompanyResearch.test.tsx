@@ -5,6 +5,9 @@ import { CompanyResearch } from "./CompanyResearch";
 
 const {
   deleteResearchMutateAsync,
+  createInterviewerMutateAsync,
+  deleteInterviewerMutateAsync,
+  updateInterviewerMutateAsync,
   upsertResearchMutateAsync,
   useCompanyResearchMock,
   useCreateInterviewerMock,
@@ -15,6 +18,9 @@ const {
   useUpdateInterviewerMock,
 } = vi.hoisted(() => ({
   deleteResearchMutateAsync: vi.fn(),
+  createInterviewerMutateAsync: vi.fn(),
+  deleteInterviewerMutateAsync: vi.fn(),
+  updateInterviewerMutateAsync: vi.fn(),
   upsertResearchMutateAsync: vi.fn(),
   useCompanyResearchMock: vi.fn(),
   useCreateInterviewerMock: vi.fn(),
@@ -39,13 +45,16 @@ describe("CompanyResearch", () => {
   beforeEach(() => {
     upsertResearchMutateAsync.mockReset().mockResolvedValue(undefined);
     deleteResearchMutateAsync.mockReset().mockResolvedValue(undefined);
+    createInterviewerMutateAsync.mockReset().mockResolvedValue(undefined);
+    deleteInterviewerMutateAsync.mockReset().mockResolvedValue(undefined);
+    updateInterviewerMutateAsync.mockReset().mockResolvedValue(undefined);
     useCompanyResearchMock.mockReturnValue({ data: null, isError: false, isPending: false });
     useInterviewersMock.mockReturnValue({ data: [], isError: false, isPending: false });
     useUpsertCompanyResearchMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: upsertResearchMutateAsync });
-    useCreateInterviewerMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: vi.fn() });
+    useCreateInterviewerMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: createInterviewerMutateAsync });
     useDeleteCompanyResearchMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: deleteResearchMutateAsync });
-    useDeleteInterviewerMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: vi.fn() });
-    useUpdateInterviewerMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: vi.fn() });
+    useDeleteInterviewerMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: deleteInterviewerMutateAsync });
+    useUpdateInterviewerMock.mockReturnValue({ isError: false, isPending: false, mutateAsync: updateInterviewerMutateAsync });
   });
 
   it("starts collapsed when the application has no research", () => {
@@ -103,5 +112,86 @@ describe("CompanyResearch", () => {
 
     expect(screen.getByText("Could not load company research. Please try again.")).toBeVisible();
     expect(screen.getByRole("button", { name: "Company Research" })).toBeVisible();
+  });
+
+  it("adds an interviewer with an independent save", async () => {
+    const user = userEvent.setup();
+    render(<CompanyResearch jobApplicationId="application-1" />);
+    await user.click(screen.getByRole("button", { name: "Company Research" }));
+    await user.click(screen.getByRole("button", { name: "Add interviewer" }));
+    await user.type(screen.getByLabelText("Interviewer name"), "Alex Morgan");
+    await user.type(screen.getByLabelText("Interviewer role"), "Engineering Manager");
+    await user.type(screen.getByLabelText("Interviewer LinkedIn"), "https://linkedin.com/in/alex-morgan");
+    await user.click(screen.getByRole("button", { name: "Save interviewer" }));
+
+    await waitFor(() => expect(createInterviewerMutateAsync).toHaveBeenCalledWith({
+      job_application_id: "application-1",
+      name: "Alex Morgan",
+      role: "Engineering Manager",
+      linkedin_url: "https://linkedin.com/in/alex-morgan",
+      notes: null,
+    }));
+  });
+
+  it("edits an existing interviewer independently", async () => {
+    const user = userEvent.setup();
+    useInterviewersMock.mockReturnValue({
+      data: [{
+        id: "interviewer-1",
+        user_id: "user-1",
+        job_application_id: "application-1",
+        name: "Alex Morgan",
+        role: "Engineering Manager",
+        linkedin_url: null,
+        notes: "Team rituals",
+        created_at: "2026-08-14T00:00:00.000Z",
+        updated_at: "2026-08-14T00:00:00.000Z",
+      }],
+      isError: false,
+      isPending: false,
+    });
+    render(<CompanyResearch jobApplicationId="application-1" />);
+    expect(screen.getByRole("button", { name: "Company Research" })).toHaveAttribute("aria-expanded", "true");
+    await user.click(screen.getByRole("button", { name: "Edit Alex Morgan" }));
+    await user.clear(screen.getByLabelText("Interviewer role"));
+    await user.type(screen.getByLabelText("Interviewer role"), "Director of Engineering");
+    await user.click(screen.getByRole("button", { name: "Save interviewer" }));
+
+    await waitFor(() => expect(updateInterviewerMutateAsync).toHaveBeenCalledWith({
+      id: "interviewer-1",
+      job_application_id: "application-1",
+      name: "Alex Morgan",
+      role: "Director of Engineering",
+      linkedin_url: null,
+      notes: "Team rituals",
+    }));
+  });
+
+  it("requires confirmation before deleting an interviewer", async () => {
+    const user = userEvent.setup();
+    useInterviewersMock.mockReturnValue({
+      data: [{
+        id: "interviewer-1",
+        user_id: "user-1",
+        job_application_id: "application-1",
+        name: "Alex Morgan",
+        role: "Engineering Manager",
+        linkedin_url: null,
+        notes: null,
+        created_at: "2026-08-14T00:00:00.000Z",
+        updated_at: "2026-08-14T00:00:00.000Z",
+      }],
+      isError: false,
+      isPending: false,
+    });
+    render(<CompanyResearch jobApplicationId="application-1" />);
+    expect(screen.getByRole("button", { name: "Company Research" })).toHaveAttribute("aria-expanded", "true");
+    await user.click(screen.getByRole("button", { name: "Delete Alex Morgan" }));
+    expect(deleteInterviewerMutateAsync).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Confirm delete interviewer" }));
+    await waitFor(() => expect(deleteInterviewerMutateAsync).toHaveBeenCalledWith({
+      id: "interviewer-1",
+      jobApplicationId: "application-1",
+    }));
   });
 });
