@@ -87,7 +87,7 @@ describe("MonthInterviewCalendar", () => {
     const user = userEvent.setup();
     const { onOpenApplication } = renderCalendar();
 
-    await user.hover(screen.getByRole("button", { name: /Technical at Acme/i }));
+    await user.click(screen.getByRole("button", { name: /Technical at Acme/i }));
     await user.click(await screen.findByRole("button", { name: "Open application" }));
 
     expect(onOpenApplication).toHaveBeenCalledWith("application-1");

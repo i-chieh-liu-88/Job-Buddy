@@ -10,6 +10,7 @@ import { AnimatedSidebarProvider } from "../../components/atoms/AnimatedSidebar/
 import { AddJobApplicationModal } from "../../components/organisms/AddJobApplicationModal/AddJobApplicationModal";
 import type { JobApplicationFormData } from "../../components/molecules/JobApplicationFormFields/jobApplicationFormSchema";
 import { useCreateJobApplication, useJobApplications } from "../../hooks/useJobApplications";
+import { ThemeProvider, ThemeToggle } from "../../components/atoms/ThemeToggle/ThemeToggle";
 
 export const SIDEBAR_STORAGE_KEY = "jobuddy:sidebar-expanded";
 
@@ -68,7 +69,8 @@ export function ApplicationShell({
   }
 
   return (
-    <div onClickCapture={handleShellClickCapture}>
+    <ThemeProvider>
+      <div onClickCapture={handleShellClickCapture}>
       <AnimatedSidebarProvider
         open={isSidebarOpen}
         onOpenChange={handleSidebarOpenChange}
@@ -78,6 +80,7 @@ export function ApplicationShell({
           "--sidebar-width-icon": "4.25rem",
         } as CSSProperties}
       >
+        <ThemeToggle className="fixed right-4 top-3 z-50 md:right-5" />
         {navigation}
         <main className="min-w-0 flex-1">{children}</main>
         {isGlobalAddOpen ? (
@@ -92,6 +95,7 @@ export function ApplicationShell({
           />
         ) : null}
       </AnimatedSidebarProvider>
-    </div>
+      </div>
+    </ThemeProvider>
   );
 }
