@@ -112,6 +112,19 @@ export type InterviewerUpdate = Partial<
   Omit<Interviewer, "id" | "user_id" | "job_application_id" | "created_at" | "updated_at">
 >;
 
+export type InterviewQuestion = {
+  id: string;
+  user_id: string;
+  interview_id: string;
+  question_text: string;
+  my_answer_notes: string | null;
+  tags: string[];
+  created_at: string;
+};
+
+export type InterviewQuestionInsert = Omit<InterviewQuestion, "id" | "created_at"> & { id?: string; created_at?: string };
+export type InterviewQuestionUpdate = Partial<Omit<InterviewQuestion, "id" | "user_id" | "interview_id" | "created_at">>;
+
 export type JobApplicationInsert = Omit<
   JobApplication,
   "id" | "created_at" | "updated_at"
@@ -158,6 +171,12 @@ export type Database = {
         Row: Interviewer;
         Insert: InterviewerInsert;
         Update: InterviewerUpdate;
+        Relationships: [];
+      };
+      interview_questions: {
+        Row: InterviewQuestion;
+        Insert: InterviewQuestionInsert;
+        Update: InterviewQuestionUpdate;
         Relationships: [];
       };
     };
