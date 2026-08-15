@@ -3,6 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InterviewRounds } from "./InterviewRounds";
 
+vi.mock("../../molecules/InterviewQuestionList/InterviewQuestionList", () => ({
+  InterviewQuestionList: () => null,
+}));
+
 const {
   createMutateAsync,
   deleteMutateAsync,

@@ -6,6 +6,7 @@ import {
   useUpdateInterview,
 } from "../../../hooks/useInterviews";
 import type { Interview } from "../../../types/database";
+import { InterviewQuestionList } from "../../molecules/InterviewQuestionList/InterviewQuestionList";
 
 type InterviewRoundsProps = {
   jobApplicationId: string;
@@ -212,6 +213,7 @@ export function InterviewRounds({ jobApplicationId }: InterviewRoundsProps) {
                   <button type="button" className={`${buttonClassName} bg-danger text-white hover:bg-danger/90`} disabled={deleteInterview.isPending} onClick={confirmDelete}>Confirm delete {interview.round_label}</button>
                 </div>
               ) : null}
+              <InterviewQuestionList interviewId={interview.id} />
             </li>
           ))}
         </ul>
