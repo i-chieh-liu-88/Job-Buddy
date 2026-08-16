@@ -263,7 +263,11 @@ describe("KanbanBoardPage", () => {
     ).toBeVisible();
     expect(
       screen.getByLabelText(
-        "Keep every opportunity organized, from the first saved role to the final decision.",
+        `Here's what's happening with your job search today, ${new Intl.DateTimeFormat("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        }).format(new Date())}`,
       ),
     ).toBeVisible();
 

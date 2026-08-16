@@ -57,7 +57,7 @@ describe("AuthGate", () => {
       </AuthGate>,
     );
 
-    expect(screen.getByText(/Job Buddy/)).toBeVisible();
+    expect(screen.getByText("Jobuddy")).toBeVisible();
     expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
       "font-display",
     );

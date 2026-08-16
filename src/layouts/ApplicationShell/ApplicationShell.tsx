@@ -11,6 +11,7 @@ import { AddJobApplicationModal } from "../../components/organisms/AddJobApplica
 import type { JobApplicationFormData } from "../../components/molecules/JobApplicationFormFields/jobApplicationFormSchema";
 import { useCreateJobApplication, useJobApplications } from "../../hooks/useJobApplications";
 import { ThemeProvider, ThemeToggle } from "../../components/atoms/ThemeToggle/ThemeToggle";
+import { useToast } from "../../components/atoms/AnimatedToastStack/AnimatedToastStack";
 
 export const SIDEBAR_STORAGE_KEY = "jobuddy:sidebar-expanded";
 
@@ -38,6 +39,7 @@ export function ApplicationShell({
   const addOpenerRef = useRef<HTMLButtonElement | null>(null);
   const applicationsQuery = useJobApplications();
   const createApplication = useCreateJobApplication();
+  const toast = useToast();
 
   const handleSidebarOpenChange = (nextOpen: boolean) => {
     setIsSidebarOpen(nextOpen);
@@ -62,10 +64,12 @@ export function ApplicationShell({
     const destinationOrderIndexes = (applicationsQuery.data ?? [])
       .filter((application) => application.status === input.status)
       .map((application) => application.order_index);
-    return createApplication.mutateAsync({
+    const result = await createApplication.mutateAsync({
       ...input,
       order_index: Math.max(0, ...destinationOrderIndexes) + 1_000,
     });
+    toast.success("Application added", `${input.company} · ${input.position}`);
+    return result;
   }
 
   return (

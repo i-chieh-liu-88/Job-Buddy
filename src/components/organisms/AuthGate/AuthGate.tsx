@@ -8,6 +8,7 @@ import {
 } from "@clerk/clerk-react";
 import type { PropsWithChildren } from "react";
 import { NewtonLoader } from "../../atoms/NewtonLoader/NewtonLoader";
+import { JobuddyLogo } from "../../atoms/JobuddyLogo/JobuddyLogo";
 import { ArchitectureWaveBackground } from "../../backgrounds/ArchitectureWaveBackground/ArchitectureWaveBackground";
 
 export function AuthGate({ children }: PropsWithChildren) {
@@ -26,12 +27,11 @@ export function AuthGate({ children }: PropsWithChildren) {
             <section className="grid min-h-[min(44rem,calc(100vh-4rem))] w-full max-w-[88rem] overflow-hidden rounded-lg border border-line bg-surface shadow-[0_28px_80px_rgba(0,0,0,0.48)] lg:grid-cols-[1.08fr_0.92fr]">
               <div className="flex min-h-[38rem] flex-col border-b border-line bg-canvas text-ink lg:min-h-0 lg:border-b-0 lg:border-r">
                 <header className="flex items-center justify-between border-b border-line px-6 py-5 sm:px-8">
-                  <span className="font-mono text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted">01 — Job Buddy</span>
+                  <JobuddyLogo />
                   <span className="font-mono text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-primary">Application system</span>
                 </header>
                 <div className="flex flex-1 flex-col justify-center px-6 py-12 sm:px-8 lg:px-12">
-                  <p className="font-mono text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-primary">Job search, organized</p>
-                  <h1 className="mt-8 max-w-xl font-display text-5xl font-medium leading-[0.98] tracking-[-0.065em] sm:text-6xl lg:text-7xl">
+                  <h1 className="mt-8 max-w-xl overflow-visible font-display text-5xl font-medium leading-[1.06] tracking-[-0.065em] sm:text-6xl lg:text-7xl">
                     <span className="block">Organize</span>
                     <span data-testid="landing-headline-primary" className="block bg-gradient-to-r from-primary via-[#a5b4fc] to-[#c7d2fe] bg-clip-text text-transparent">every move</span>
                     <span className="block">with clarity.</span>

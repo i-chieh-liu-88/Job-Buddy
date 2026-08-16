@@ -26,6 +26,7 @@ import type { ReorderResult } from "../../components/organisms/KanbanBoard/reord
 import { JOB_APPLICATION_STATUS_ORDER } from "../../lib/jobApplicationStatusPresentation";
 import { ApplicationShell } from "../../layouts/ApplicationShell/ApplicationShell";
 import type { JobApplication } from "../../types/database";
+import { useToast } from "../../components/atoms/AnimatedToastStack/AnimatedToastStack";
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
@@ -43,6 +44,14 @@ function formatQueryError(error: unknown) {
   });
 
   return details.length > 0 ? details.join(" · ") : "Unknown query error";
+}
+
+function formatTodayLabel() {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(new Date());
 }
 
 function findApplicationOpener(applicationId: string) {
@@ -75,8 +84,10 @@ export function KanbanBoardPage() {
   const reorderApplications = useReorderJobApplications();
   const updateApplication = useUpdateJobApplication();
   const deleteApplication = useDeleteJobApplication();
+  const toast = useToast();
   const applications = useMemo(() => applicationsQuery.data ?? [], [applicationsQuery.data]);
   const greeting = user?.firstName ? `Good to see you, ${user.firstName}.` : "Good to see you.";
+  const todayLabel = formatTodayLabel();
   const stageCounts = JOB_APPLICATION_STATUS_ORDER.reduce<ApplicationStageCounts>(
     (counts, status) => ({
       ...counts,
@@ -165,10 +176,12 @@ export function KanbanBoardPage() {
       .filter((application) => application.status === input.status)
       .map((application) => application.order_index);
 
-    return createApplication.mutateAsync({
+    const result = await createApplication.mutateAsync({
       ...input,
       order_index: Math.max(0, ...destinationOrderIndexes) + 1_000,
     });
+    toast.success("Application added", `${input.company} · ${input.position}`);
+    return result;
   }
 
   function handleSelectApplication(
@@ -201,7 +214,9 @@ export function KanbanBoardPage() {
 
   async function handleSaveApplication(input: UpdateJobApplicationInput) {
     if (input.status === selectedApplication?.status) {
-      return updateApplication.mutateAsync(input);
+      const result = await updateApplication.mutateAsync(input);
+      toast.success("Application updated");
+      return result;
     }
 
     const destinationOrderIndexes = applications
@@ -211,10 +226,12 @@ export function KanbanBoardPage() {
       )
       .map((application) => application.order_index);
 
-    return updateApplication.mutateAsync({
+    const result = await updateApplication.mutateAsync({
       ...input,
       order_index: Math.max(0, ...destinationOrderIndexes) + 1_000,
     });
+    toast.success("Application updated");
+    return result;
   }
 
   return (
@@ -266,10 +283,10 @@ export function KanbanBoardPage() {
               />
               <TextReveal
                 as="p"
-                className="mt-2 max-w-2xl text-sm leading-6 text-muted"
+                className="mt-2 max-w-2xl font-light text-sm leading-6 text-ink"
                 delay={0.52}
                 stagger={0.025}
-                text="Keep every opportunity organized, from the first saved role to the final decision."
+                text={`Here's what's happening with your job search today, ${todayLabel}`}
               />
             </header>
 
@@ -324,7 +341,11 @@ export function KanbanBoardPage() {
               isDeleting={deleteApplication.isPending}
               isSaving={updateApplication.isPending}
               isResumesLoading={resumesQuery.isPending}
-              onDelete={(id) => deleteApplication.mutateAsync(id)}
+              onDelete={async (id) => {
+                const result = await deleteApplication.mutateAsync(id);
+                toast.success("Application deleted");
+                return result;
+              }}
               onExitComplete={handleDetailExitComplete}
               onOpenChange={(open) => {
                 if (!open) handleRequestCloseDetails();

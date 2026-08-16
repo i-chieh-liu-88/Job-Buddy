@@ -56,7 +56,6 @@ export function JobuddyLogo({ className, compact = false }: JobuddyLogoProps) {
 
       {!compact ? (
         <span
-          aria-hidden="true"
           className="font-display text-base font-semibold tracking-[-0.03em] text-ink"
           onMouseEnter={animateMark}
         >
