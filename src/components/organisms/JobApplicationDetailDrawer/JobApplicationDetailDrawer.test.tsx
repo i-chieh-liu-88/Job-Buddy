@@ -161,7 +161,9 @@ describe("JobApplicationDetailDrawer", () => {
       "https://example.com/jobs/frontend-engineer",
     );
     expect(screen.getByLabelText("Status")).toHaveValue("interview");
-    expect(screen.getByLabelText("Applied date")).toHaveValue("2026-08-01");
+    expect(screen.getByRole("button", { name: "Applied date" })).toHaveTextContent(
+      "2026-08-01",
+    );
     expect(screen.getByLabelText("Notes")).toHaveValue("Bring portfolio");
     expect(screen.getByLabelText("Resume")).toHaveValue(
       "11111111-1111-4111-8111-111111111111",
@@ -303,7 +305,13 @@ describe("JobApplicationDetailDrawer", () => {
     await user.clear(screen.getByLabelText("Job URL"));
     await user.type(screen.getByLabelText("Job URL"), "  https://example.com/new  ");
     await user.selectOptions(screen.getByLabelText("Status"), "offer");
-    await user.clear(screen.getByLabelText("Applied date"));
+    await user.click(screen.getByRole("button", { name: "Applied date" }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Applied date picker" })).getByRole(
+        "button",
+        { name: "Cancel" },
+      ),
+    );
     await user.clear(screen.getByLabelText("Notes"));
     await user.type(screen.getByLabelText("Notes"), "  Keep spacing  ");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
@@ -315,7 +323,7 @@ describe("JobApplicationDetailDrawer", () => {
         position: "Staff Engineer",
         job_url: "https://example.com/new",
         status: "offer",
-        applied_date: null,
+        applied_date: "2026-08-01",
         notes: "  Keep spacing  ",
         resume_id: "11111111-1111-4111-8111-111111111111",
       });

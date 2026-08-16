@@ -102,7 +102,7 @@ export function ResumeUploadModal({
               <input
                 ref={labelRef}
                 id="resume-label"
-                className="mt-1 h-10 w-full rounded-lg border border-line bg-[#111318] px-3 text-sm text-ink outline-none focus:border-focus focus:ring-2 focus:ring-focus/20"
+                className="mt-1 h-10 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-focus focus:ring-2 focus:ring-focus/20"
                 disabled={isUploading}
                 value={label}
                 onChange={(event) => {

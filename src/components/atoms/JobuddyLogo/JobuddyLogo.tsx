@@ -28,9 +28,13 @@ export function JobuddyLogo({ className, compact = false }: JobuddyLogoProps) {
   };
 
   return (
-    <span
+    <a
+      href="/"
       aria-label="Jobuddy"
-      className={cn("inline-flex items-center gap-2", className)}
+      className={cn(
+        "inline-flex cursor-pointer items-center gap-2 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+        className,
+      )}
     >
       <motion.svg
         aria-hidden="true"
@@ -59,6 +63,6 @@ export function JobuddyLogo({ className, compact = false }: JobuddyLogoProps) {
           Jobuddy
         </span>
       ) : null}
-    </span>
+    </a>
   );
 }

@@ -23,8 +23,8 @@ export function AuthGate({ children }: PropsWithChildren) {
         <SignedIn>{children}</SignedIn>
         <SignedOut>
           <main className="grid min-h-screen place-items-center bg-canvas p-4 text-ink sm:p-8 lg:p-12">
-            <section className="grid min-h-[min(44rem,calc(100vh-4rem))] w-full max-w-[88rem] overflow-hidden rounded-lg border border-line bg-[#090a0f] shadow-[0_28px_80px_rgba(0,0,0,0.48)] lg:grid-cols-[1.08fr_0.92fr]">
-              <div className="flex min-h-[38rem] flex-col border-b border-line lg:min-h-0 lg:border-b-0 lg:border-r">
+            <section className="grid min-h-[min(44rem,calc(100vh-4rem))] w-full max-w-[88rem] overflow-hidden rounded-lg border border-line bg-surface shadow-[0_28px_80px_rgba(0,0,0,0.48)] lg:grid-cols-[1.08fr_0.92fr]">
+              <div className="flex min-h-[38rem] flex-col border-b border-line bg-canvas text-ink lg:min-h-0 lg:border-b-0 lg:border-r">
                 <header className="flex items-center justify-between border-b border-line px-6 py-5 sm:px-8">
                   <span className="font-mono text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted">01 — Job Buddy</span>
                   <span className="font-mono text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-primary">Application system</span>

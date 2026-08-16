@@ -32,6 +32,8 @@ describe("JobuddyLogo", () => {
     const wordmark = screen.getByText("Jobuddy");
 
     expect(logo).toBeInTheDocument();
+    expect(logo).toHaveAttribute("href", "/");
+    expect(logo).toHaveClass("cursor-pointer");
     expect(mark).toHaveClass("size-6");
     expect(mark).toHaveAttribute("viewBox", "0 0 256 256");
     expect(markPath).toHaveAttribute(

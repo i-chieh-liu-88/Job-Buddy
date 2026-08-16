@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { WheelPicker } from "../../atoms/WheelPicker/WheelPicker";
 
 type DateWheelPickerProps = {
+  onClear?: () => void;
   onCancel: () => void;
   onConfirm: (value: string) => void;
   value: string;
@@ -36,6 +37,7 @@ function toIsoDate(year: number, month: number, day: number) {
 }
 
 export function DateWheelPicker({
+  onClear,
   onCancel,
   onConfirm,
   value,
@@ -104,6 +106,15 @@ export function DateWheelPicker({
           />
         </div>
         <div className="mt-5 flex justify-end gap-2">
+          {onClear && value ? (
+            <button
+              type="button"
+              className="mr-auto inline-flex h-10 items-center justify-center rounded-md border border-line px-4 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              onClick={onClear}
+            >
+              Clear
+            </button>
+          ) : null}
           <button
             type="button"
             className="inline-flex h-10 items-center justify-center rounded-md border border-line px-4 text-sm font-medium text-ink transition-colors hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"

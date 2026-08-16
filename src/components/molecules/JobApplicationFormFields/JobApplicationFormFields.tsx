@@ -31,7 +31,7 @@ type JobApplicationFormFieldsProps = {
 };
 
 const controlClassName =
-  "mt-1 w-full rounded-lg border bg-[#111318] px-3 text-sm text-ink outline-none transition-[border-color,box-shadow,background-color] placeholder:text-muted/70 focus:border-focus focus:ring-2 focus:ring-focus/20 disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted motion-reduce:transition-none";
+  "mt-1 w-full rounded-lg border border-line bg-canvas px-3 text-sm text-ink outline-none transition-[border-color,box-shadow,background-color] placeholder:text-muted focus:border-focus focus:ring-2 focus:ring-focus/20 disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted motion-reduce:transition-none";
 
 function statusLabel(status: string) {
   return status.charAt(0).toUpperCase() + status.slice(1);

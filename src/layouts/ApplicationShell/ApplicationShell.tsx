@@ -80,7 +80,7 @@ export function ApplicationShell({
           "--sidebar-width-icon": "4.25rem",
         } as CSSProperties}
       >
-        <ThemeToggle className="fixed right-4 top-3 z-50 md:right-5" />
+        <ThemeToggle className="fixed bottom-4 right-4 z-30 md:bottom-auto md:right-5 md:top-3 md:z-50" />
         {navigation}
         <main className="min-w-0 flex-1">{children}</main>
         {isGlobalAddOpen ? (

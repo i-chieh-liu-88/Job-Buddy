@@ -9,7 +9,9 @@ describe("AddApplicationButton", () => {
     expect(screen.getByRole("button", { name: "Add application" })).toHaveClass(
       "rounded-full",
       "cursor-pointer",
-      "bg-[#0A0A0A]/80",
+      "bg-surface",
+      "text-ink",
+      "focus-visible:ring-2",
     );
     expect(screen.getByTestId("add-application-plus")).toHaveClass("size-7");
     expect(screen.getByText("Add application")).toHaveClass(

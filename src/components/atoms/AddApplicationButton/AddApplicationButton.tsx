@@ -18,7 +18,7 @@ export function AddApplicationButton({
     <MagneticAddApplicationButton
       aria-label="Add application"
       className={cn(
-        "min-h-11 cursor-pointer rounded-full border-white/45 bg-[#0A0A0A]/80 px-3 text-ink backdrop-blur-sm hover:border-white/80 hover:bg-white/10",
+        "min-h-11 cursor-pointer rounded-full border-line bg-surface px-3 text-ink shadow-sm backdrop-blur-sm transition-colors hover:border-ink/45 hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus focus-visible:ring-2 focus-visible:ring-focus/40",
         collapsed ? "size-11 p-0" : "gap-2.5",
       )}
       disabled={disabled}
@@ -29,7 +29,7 @@ export function AddApplicationButton({
     >
       <span
         aria-hidden="true"
-        className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-[#0A0A0A]"
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-white shadow-sm"
         data-testid="add-application-plus"
       >
         <Plus className="size-4.5 stroke-[2.5]" />

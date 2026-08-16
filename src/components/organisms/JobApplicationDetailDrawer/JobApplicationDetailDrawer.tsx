@@ -5,6 +5,7 @@ import { StatefulButton } from "../../atoms/StatefulButton/StatefulButton";
 import { InterviewRounds } from "../InterviewRounds/InterviewRounds";
 import { CompanyResearch } from "../CompanyResearch/CompanyResearch";
 import { JobApplicationFormFields } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
+import { DateWheelPicker } from "../../molecules/DateWheelPicker/DateWheelPicker";
 import type { JobApplicationFormControl } from "../../molecules/JobApplicationFormFields/JobApplicationFormFields";
 import {
   issuesToFieldErrors,
@@ -77,6 +78,7 @@ export function JobApplicationDetailDrawer({
     useState<JobApplicationFormErrors>({});
   const [isDeleteConfirmationVisible, setIsDeleteConfirmationVisible] =
     useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const openResume = useOpenResume();
   const isBusy = isSaving || isDeleting;
   const linkedResume = values.resume_id
@@ -198,6 +200,7 @@ export function JobApplicationDetailDrawer({
             showResumePicker
             values={values}
             onChange={handleFieldChange}
+            onOpenDatePicker={() => setIsDatePickerOpen(true)}
             setFieldRef={(field, element) => {
               if (element) fieldRefs.current[field] = element;
               if (field === "company") companyFocusRef.current = element;
@@ -308,6 +311,20 @@ export function JobApplicationDetailDrawer({
             </StatefulButton>
           </div>
         </div>
+        {isDatePickerOpen ? (
+          <DateWheelPicker
+            value={values.applied_date}
+            onClear={() => {
+              handleFieldChange("applied_date", null);
+              setIsDatePickerOpen(false);
+            }}
+            onCancel={() => setIsDatePickerOpen(false)}
+            onConfirm={(value) => {
+              handleFieldChange("applied_date", value);
+              setIsDatePickerOpen(false);
+            }}
+          />
+        ) : null}
       </form>
     </Drawer>
   );
