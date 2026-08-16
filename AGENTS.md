@@ -31,7 +31,7 @@ This file defines the rules that contributors and coding agents must follow when
 - Identify risks, assumptions, dependencies, and open questions before making changes.
 - Create a Todo list before implementation begins.
 
-### Create and Maintain the Todo List
+.....### Create and Maintain the Todo List
 
 - Break the task into small, concrete steps.
 - Check that the steps are ordered by dependency and execution sequence.
@@ -52,57 +52,57 @@ This file defines the rules that contributors and coding agents must follow when
 
 - Do not make blind changes; inspect the relevant existing code and its dependencies first.
 - Before major modifications, Codex must briefly summarize the planned changes.
-- Do not delete or rename files unless the task explicitly requires it.
-- Do not fundamentally restructure files, modules, or directories unless it is explicitly part of the task.
+- Do not delete or rena.me files unless the task explicitly requires it.
+- Do not fundamentally .restructure files, modules, or directories unless it is explicitly part of the task.
 - Confirm that major changes preserve existing public behavior and security boundaries.
 - Do not change authentication, routing, API contracts, CI/CD, `.env*`, or migration files without explicit approval.
 - Do not disable tests or checks merely to hide errors.
 
 ## Code Standards
-
+....................................................................................
 - Use TypeScript and React conventions already established in `src`.
 - Use functional React components and hooks.
-- Keep components small and give files, functions, variables, and types clear names.
-- Avoid `any` unless no safe typed alternative exists.
-- Keep imports and formatting consistent with nearby files.
-- Add or update tests when changing behavior.
-- Avoid refactoring outside the task scope and only change relevant files.
+- Keep components smal....and give files, functions, variables, and types clear names.
+- Avoid `any` unless n....safe typed alternative exists.
+- Keep imports and for....tting consistent with nearby files.
+- Add or update tests ....en changing behavior.
+- Avoid refactoring ou....ide the task scope and only change relevant files.
 
-## Atomic Component Structure
+## Atomic Component St....cture
 
-Use Atomic Design for new reusable UI components:
+Use Atomic Design for ....w reusable UI components:
 
 ```text
 src/
 ├── components/
-│   ├── atoms/          # Basic controls and visual primitives
-│   ├── molecules/      # Small groups of atoms with one purpose
-│   ├── organisms/      # Complete reusable interface sections
-│   └── backgrounds/    # Reusable decorative backgrounds
-├── layouts/            # Page-level structural shells
-└── pages/              # Route content, data loading, and feature logic
+│   ├── atoms/        ....# Basic controls and visual primitives
+│   ├── molecules/    ....# Small groups of atoms with one purpose
+│   ├── organisms/    ....# Complete reusable interface sections
+│   └── backgrounds/  ....# Reusable decorative backgrounds
+├── layouts/          ....# Page-level structural shells
+└── pages/            ....# Route content, data loading, and feature logic
 ```
 
 - Put buttons, inputs, labels, icons, and loaders in `atoms`.
 - Put search fields, pagination, form rows, and compact cards in `molecules`.
 - Put navigation bars, sidebars, footers, and complex feature sections in `organisms`.
-- Put reusable visual-only backgrounds in `backgrounds`.
-- Use `layouts` to arrange organisms and page content without feature-specific data logic.
-- Use `pages` to connect routes, queries, mutations, and complete user workflows.
-- Atoms must not import molecules, organisms, layouts, or pages.
+- Put reusable visual-on.grounds in `backgrounds`.
+- Use `layouts` to arran.nisms and page content without feature-specific data logic.
+- Use `pages` to connect., queries, mutations, and complete user workflows.
+- Atoms must not import .es, organisms, layouts, or pages.
 - Molecules may import atoms but must not import organisms, layouts, or pages.
-- Organisms may import atoms and molecules but must not import layouts or pages.
-- Keep each component in its own named folder with its component, styles, types, tests, and optional `index.ts` together.
-- Promote a component only when its responsibility grows; do not classify it by visual size alone.
+- Organisms may import atoms an. molecules but must not import layouts or pages.
+- Keep each component in its ow. named folder with its component, styles, types, tests, and optional `index.ts` together.
+- Promote a component only when.its responsibility grows; do not classify it by visual size alone.
 
 ## Clean Frontend Code
 
 ### HTML and JSX
 
-- Use semantic elements such as `header`, `nav`, `main`, `section`, and `button` where appropriate.
-- Use buttons for actions and links for navigation.
-- Keep JSX structure simple and avoid unnecessary wrapper elements.
-- Provide accessible labels, alternative text, and keyboard behavior for interactive content.
+- Use semantic elements such as.`header`, `nav`, `main`, `section`, and `button` where appropriate.
+- Use buttons for actions and l.nks for navigation.
+- Keep JSX structure simple and.avoid unnecessary wrapper elements.
+- Provide accessible labels, al.ernative text, and keyboard behavior for interactive content.
 
 ### CSS
 
@@ -117,7 +117,7 @@ src/
 ### JavaScript and TypeScript
 
 - Use clear names that describe what variables, functions, hooks, and handlers do.
-- Keep functions focused on one responsibility and avoid deeply nested logic.
+- Keep functions focu.ed on one responsibility and avoid deeply nested logic.
 - Separate rendering, styling, state management, and data access.
 - Avoid global variables; keep state in the narrowest practical scope.
 - Prefer immutable updates and explicit data flow.
